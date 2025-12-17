@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Icons } from '../components/Icons';
 import { QRCodeGeneratorTool } from './QRCodeGenerator';
@@ -18,8 +19,20 @@ import { TextAnalyzerTool } from './TextAnalyzer';
 import { NumberToWordsTool } from './NumberToWords';
 import { StopwatchTool } from './Stopwatch';
 import { ImagePaletteGeneratorTool } from './ImagePaletteGenerator';
+import { ChordGeneratorTool } from './ChordGenerator';
+import { MyHistoryTool } from './MyHistory';
+import { CapitalCitiesTool } from './CapitalCities';
+import { CzechHolidaysTool } from './CzechHolidays';
+import { DebtListTool } from './DebtList';
+import { ShoppingListTool } from './ShoppingList';
+import { QuickNotesTool } from './QuickNotes';
+import { TodoListTool } from './TodoList';
+import { ChromaticTunerTool } from './ChromaticTuner';
+import { AudioTrimmerTool } from './AudioTrimmer';
+import { AudioConverterTool } from './AudioConverter';
+import { BPMTapperTool } from './BPMTapper';
 
-export type ToolId = 'dashboard' | 'qr-code' | 'password-gen' | 'text-formatter' | 'image-resizer' | 'language-guide' | 'color-picker' | 'currency-converter' | 'ai-compass' | 'weather-forecast' | 'vocative-declensor' | 'image-cropper' | 'pizza-calculator' | 'name-day-calendar' | 'random-picker' | 'text-analyzer' | 'number-to-words' | 'stopwatch' | 'image-palette';
+export type ToolId = 'dashboard' | 'qr-code' | 'password-gen' | 'text-formatter' | 'image-resizer' | 'language-guide' | 'color-picker' | 'currency-converter' | 'ai-compass' | 'weather-forecast' | 'vocative-declensor' | 'image-cropper' | 'pizza-calculator' | 'name-day-calendar' | 'random-picker' | 'text-analyzer' | 'number-to-words' | 'stopwatch' | 'image-palette' | 'chord-generator' | 'my-history' | 'capital-cities' | 'czech-holidays' | 'debt-list' | 'shopping-list' | 'quick-notes' | 'todo-list' | 'chromatic-tuner' | 'audio-trimmer' | 'audio-converter' | 'bpm-tapper';
 
 export interface ToolConfig {
   id: ToolId;
@@ -31,6 +44,102 @@ export interface ToolConfig {
 }
 
 export const tools: ToolConfig[] = [
+  {
+    id: 'bpm-tapper',
+    title: 'BPM Tapper',
+    description: 'Rychlé a přesné měření tempa hudby klepáním na obrazovku s inteligentním průměrováním.',
+    icon: <Icons.Hand />,
+    component: BPMTapperTool,
+    color: 'from-indigo-500 via-purple-500 to-pink-600'
+  },
+  {
+    id: 'audio-converter',
+    title: 'Převod formátu zvuku',
+    description: 'Hromadný převod audio souborů mezi formáty WAV, MP3, AAC a dalšími přímo v prohlížeči.',
+    icon: <Icons.ArrowsRightLeft />,
+    component: AudioConverterTool,
+    color: 'from-blue-600 via-indigo-600 to-violet-700'
+  },
+  {
+    id: 'audio-trimmer',
+    title: 'Zkrátit audio',
+    description: 'Jednoduchý a vizuální nástroj pro ořezávání zvukových souborů s funkcí Fade In/Out.',
+    icon: <Icons.Scissors />,
+    component: AudioTrimmerTool,
+    color: 'from-emerald-500 via-teal-600 to-green-700'
+  },
+  {
+    id: 'chromatic-tuner',
+    title: 'Chromatická ladička',
+    description: 'Přesné ladění hudebních nástrojů nebo zpěvu přímo přes mikrofon v prohlížeči.',
+    icon: <Icons.Music />,
+    component: ChromaticTunerTool,
+    color: 'from-indigo-600 via-blue-700 to-indigo-900'
+  },
+  {
+    id: 'todo-list',
+    title: 'Seznam úkolů',
+    description: 'Rychlá a přehledná správa vašich denních povinností. Ukládání přímo v prohlížeči.',
+    icon: <Icons.ClipboardList />,
+    component: TodoListTool,
+    color: 'from-emerald-500 via-teal-600 to-indigo-600'
+  },
+  {
+    id: 'quick-notes',
+    title: 'Rychlé poznámky',
+    description: 'Bleskové zaznamenávání myšlenek s historií změn a možností exportu do textu.',
+    icon: <Icons.Note />,
+    component: QuickNotesTool,
+    color: 'from-amber-400 via-orange-500 to-yellow-600'
+  },
+  {
+    id: 'shopping-list',
+    title: 'Nákupní seznam',
+    description: 'Váš digitální lístek do obchodu. Přidávejte položky, odškrtávejte hotové a mějte přehled o postupu.',
+    icon: <Icons.ShoppingCart />,
+    component: ShoppingListTool,
+    color: 'from-indigo-600 via-blue-600 to-emerald-600'
+  },
+  {
+    id: 'debt-list',
+    title: 'Seznam dluhů',
+    description: 'Mějte přehled o svých financích. Jednoduchá správa toho, co dlužíte a co ostatní dluží vám.',
+    icon: <Icons.Receipt />,
+    component: DebtListTool,
+    color: 'from-rose-500 via-slate-700 to-emerald-500'
+  },
+  {
+    id: 'czech-holidays',
+    title: 'České Svátky',
+    description: 'Přehled státních svátků, analýza pracovního volna a odpočet k nejbližšímu dni volna.',
+    icon: <Icons.Calendar />,
+    component: CzechHolidaysTool,
+    color: 'from-blue-600 to-indigo-700'
+  },
+  {
+    id: 'capital-cities',
+    title: 'Hlavní města',
+    description: 'Procvičte si své znalosti geografie v interaktivním kvízu nebo prozkoumejte státy světa.',
+    icon: <Icons.Map />,
+    component: CapitalCitiesTool,
+    color: 'from-blue-500 via-indigo-600 to-purple-600'
+  },
+  {
+    id: 'my-history',
+    title: 'Moje Historie',
+    description: 'Osobní časová osa vašeho života. Zaznamenejte milníky, vzpomínky a budoucí cíle.',
+    icon: <Icons.History />,
+    component: MyHistoryTool,
+    color: 'from-indigo-600 via-purple-600 to-teal-600'
+  },
+  {
+    id: 'chord-generator',
+    title: 'Generátor akordů',
+    description: 'Inspirace pro hudebníky. Generuje harmonické progrese podle tóniny a stylu.',
+    icon: <Icons.Music />,
+    component: ChordGeneratorTool,
+    color: 'from-indigo-600 to-blue-700'
+  },
   {
     id: 'image-palette',
     title: 'Generátor palety z obrázku',
@@ -90,7 +199,7 @@ export const tools: ToolConfig[] = [
   {
     id: 'image-cropper',
     title: 'Ořezávač obrázků',
-    description: 'Přesný ořez fotek na formáty sociálních sítí (IG, FB, YT...).',
+    description: 'Přesný ořez fotek na formáty sociálních seizí (IG, FB, YT...).',
     icon: <Icons.Crop />,
     component: ImageCropperTool,
     color: 'from-orange-500 to-red-500'
