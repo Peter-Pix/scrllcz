@@ -44,7 +44,7 @@ Projekt je připraven pro nasazení na Vercel, ale lze jej spustit lokálně.
 1. **Klonování repozitáře:**
    ```bash
    git clone https://github.com/Peter-Pix/scrllcz.git
-   cd scrollo
+   cd scrllcz
    ```
 
 2. **Instalace závislostí:**
