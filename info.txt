@@ -1,0 +1,47 @@
+Scrollo.cz - Vaše sada digitálních nástrojů
+===========================================
+
+Vítejte v aplikaci Scrollo.cz!
+Jedná se o moderní webovou aplikaci, která sdružuje užitečné nástroje pro každodenní práci, kreativitu i zábavu na jednom místě. Vše funguje přímo ve vašem prohlížeči, bez nutnosti instalace a s důrazem na soukromí.
+
+SEZNAM DOSTUPNÝCH NÁSTROJŮ
+--------------------------
+
+GRAFIKA A DESIGN:
+- Generátor palety z obrázku: Získejte barevné kódy (HEX, RGB) z jakékoliv fotky.
+- Ořezávač obrázků: Připravte fotky pro Instagram, Facebook, YouTube a další.
+- Změna velikosti obrázku: Rychlá úprava rozměrů a komprese.
+- Color Picker: Pokročilý výběr barev, převody (HEX, RGB, HSL) a pipeta.
+- Generátor QR kódů: Vytvořte QR kód pro odkazy, texty nebo Wi-Fi.
+
+TEXT A JAZYKY:
+- Číslo slovy: Převod číselných částek na text (vhodné pro faktury/smlouvy).
+- Formátovač textu: Odstranění diakritiky, změna velikosti písmen, čištění mezer.
+- Počítadlo textu: Statistiky znaků, slov, odhad doby čtení a analýza klíčových slov.
+- Skloňování jmen: Generátor oslovení do e-mailů (5. pád).
+- Jazykový průvodce: Statistiky a tipy pro studium světových jazyků.
+
+UTILITY A PRODUKTIVITA:
+- Časovač a Stopky: Pomodoro technika, odpočet pro prezentace a přesné stopky.
+- Generátor hesel: Tvorba bezpečných hesel na míru.
+- Měnová kalkulačka: Převody měn dle aktuálního kurzu ČNB.
+- Předpověď počasí: Detailní předpověď a aktuální stav pro ČR i svět.
+- Kalendář svátků: Zjistěte, kdo má dnes svátek (ČR/SK).
+
+LIFESTYLE A AI:
+- Pizza kalkulačka: Spočíttejte si, která velikost pizzy je nejvýhodnější.
+- Náhodné losování: Losování jmen, čísel a generátor rozhodnutí.
+- AI Kompas: Průvodce světem umělé inteligence (ChatGPT, Claude, Gemini...).
+
+HLAVNÍ VÝHODY
+-------------
+1. Soukromí: Většina nástrojů zpracovává data přímo ve vašem zařízení.
+2. Rychlost: Žádné zbytečné načítání, čistý a rychlý design.
+3. Responzivita: Funguje skvěle na mobilu, tabletu i počítači.
+4. Zdarma: Všechny nástroje jsou dostupné bez poplatků.
+
+KONTAKT A VÝVOJ
+---------------
+Verze aplikace: 1.0.0
+Technologie: React, Tailwind CSS, Google Gemini API
+Licence: MIT
