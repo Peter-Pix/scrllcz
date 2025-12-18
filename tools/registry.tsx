@@ -34,10 +34,13 @@ import { BPMTapperTool } from './BPMTapper';
 import { InvestmentCalculatorTool } from './InvestmentCalculator';
 import { MetronomeTool } from './Metronome';
 import { MarkdownConverterTool } from './MarkdownConverter';
+import { PersonalityTestTool } from './PersonalityTest';
+import { EmbeddableCountdownTool } from './EmbeddableCountdown';
+import { TextDiffTool } from './TextDiff';
 
 export type ToolCategory = 'Vše' | 'Grafika' | 'Text' | 'Produktivita' | 'Hudba' | 'Finance' | 'Ostatní';
 
-export type ToolId = 'dashboard' | 'qr-code' | 'password-gen' | 'text-formatter' | 'image-resizer' | 'language-guide' | 'color-picker' | 'currency-converter' | 'ai-compass' | 'weather-forecast' | 'vocative-declensor' | 'image-cropper' | 'pizza-calculator' | 'name-day-calendar' | 'random-picker' | 'text-analyzer' | 'number-to-words' | 'stopwatch' | 'image-palette' | 'chord-generator' | 'my-history' | 'capital-cities' | 'czech-holidays' | 'debt-list' | 'shopping-list' | 'quick-notes' | 'todo-list' | 'chromatic-tuner' | 'audio-trimmer' | 'audio-converter' | 'bpm-tapper' | 'investment-calc' | 'metronome' | 'markdown-conv';
+export type ToolId = 'dashboard' | 'qr-code' | 'password-gen' | 'text-formatter' | 'image-resizer' | 'language-guide' | 'color-picker' | 'currency-converter' | 'ai-compass' | 'weather-forecast' | 'vocative-declensor' | 'image-cropper' | 'pizza-calculator' | 'name-day-calendar' | 'random-picker' | 'text-analyzer' | 'number-to-words' | 'stopwatch' | 'image-palette' | 'chord-generator' | 'my-history' | 'capital-cities' | 'czech-holidays' | 'debt-list' | 'shopping-list' | 'quick-notes' | 'todo-list' | 'chromatic-tuner' | 'audio-trimmer' | 'audio-converter' | 'bpm-tapper' | 'investment-calc' | 'metronome' | 'markdown-conv' | 'personality-test' | 'embed-countdown' | 'text-diff';
 
 export interface ToolConfig {
   id: ToolId;
@@ -50,6 +53,33 @@ export interface ToolConfig {
 }
 
 export const tools: ToolConfig[] = [
+  {
+    id: 'text-diff',
+    title: 'Porovnávač textů',
+    description: 'Najděte plynule všechny rozdíly mezi dvěma verzemi textu se zvýrazněním změn.',
+    category: 'Text',
+    icon: <Icons.DocumentDuplicate />,
+    component: TextDiffTool,
+    color: 'from-blue-600 via-indigo-600 to-cyan-700'
+  },
+  {
+    id: 'embed-countdown',
+    title: 'Vlastní odpočet',
+    description: 'Vytvořte si elegantní odpočet do libovolného data a vložte si ho na svůj web nebo e-shop.',
+    category: 'Produktivita',
+    icon: <Icons.Hourglass />,
+    component: EmbeddableCountdownTool,
+    color: 'from-blue-600 via-indigo-600 to-purple-700'
+  },
+  {
+    id: 'personality-test',
+    title: 'Osobnostní Test',
+    description: 'Hloubková analýza vaší povahy, silných stránek a průvodce komunikací s ostatními.',
+    category: 'Ostatní',
+    icon: <Icons.Brain />,
+    component: PersonalityTestTool,
+    color: 'from-violet-600 via-indigo-600 to-blue-700'
+  },
   {
     id: 'markdown-conv',
     title: 'Markdown & HTML',

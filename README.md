@@ -1,88 +1,62 @@
-# Scrollo.cz 🛠️
 
-Moderní, rychlá a modulární sada webových nástrojů postavená na Reactu a Tailwind CSS. Aplikace slouží jako "švýcarský nůž" pro každodenní digitální úkoly, od práce s grafikou po textové analýzy.
+# Scrollo.cz 🛠️ 
 
-## ✨ Funkce
+**Moderní digitální švýcarský nůž postavený na Reactu 19.**
+Všechny potřebné nástroje pro práci s textem, grafikou, zvukem a produktivitou na jednom místě, přímo ve vašem prohlížeči.
 
-Aplikace obsahuje rozšiřitelnou sadu nástrojů (`tools/registry.tsx`):
+## ✨ Proč Scrollo?
+
+- **Absolutní soukromí**: 99 % výpočtů probíhá lokálně na vašem zařízení (Client-side). Vaše data, fotky a poznámky nikdy neopouštějí váš počítač.
+- **Blesková rychlost**: Minimalistický kód bez zbytečných knihoven třetích stran. Žádné cookies, žádné reklamy, žádné čekání.
+- **Design na prvním místě**: "Liquid" UI systém se zaměřením na detaily, plynulé animace a responzivitu.
+
+## 🚀 Hlavní nástroje
 
 ### 🎨 Grafika
-- **Generátor palety:** Extrakce barev z obrázků pomocí Canvas API a clusteringu.
-- **Color Picker:** Pokročilý výběr barev, konverze (HEX/RGB/HSL), pipeta.
-- **Image Resizer & Cropper:** Klientská úprava obrázků bez odesílání na server.
-- **QR Generátor:** Tvorba kódů s nastavením barev.
+- **Generátor palety**: Extrakce barev z obrázků pomocí Canvas API.
+- **Ořezávač & Resizer**: Profesionální úprava fotek pro sociální sítě.
+- **Color Picker**: Převody HEX/RGB/HSL a vizuální pipeta.
 
-### 📝 Text a Data
-- **Text Analyzer:** Pokročilá statistika textu, frekvence slov, odhady časů.
-- **Formátovač:** Čištění textu, odstranění diakritiky, Base64.
-- **Číslo slovy:** Algoritmický převod čísel na text (čeština).
-- **Vocative Declensor:** Skloňování jmen do 5. pádu (databáze + heuristika).
+### 📝 Text & Programování
+- **LCS Porovnávač**: Inteligentní diff nástroj pro revizi textů a kódu bez falešných posunů.
+- **Markdown / HTML**: Real-time konvertor syntaxe.
+- **Text Analyzer**: Hloubková statistika, odhady čtení a frekvence slov.
+- **Skloňování jmen**: Unikátní český algoritmus pro oslovování.
 
-### ⚡ Produktivita
-- **Stopky a Časovač:** Full-screen režim, Pomodoro presety, analogové zobrazení.
-- **Měnová kalkulačka:** Napojení na XML API ČNB (přes proxy).
-- **Generátor hesel:** Kryptograficky bezpečné generování.
-- **AI Kompas:** Informační rozcestník pro AI modely.
+### 🎧 Hudba & Zvuk
+- **Audio Trimmer**: Vizuální ořezávání s efekty Fade In/Out.
+- **Ladička & Metronom**: Hardware akcelerované nástroje pro hudebníky.
+- **BPM Tapper**: Měření tempa s filtrací lidské chyby.
 
-### 🎈 Lifestyle
-- **Počasí:** Open-Meteo API integrace.
-- **Pizza Kalkulačka:** Matematické porovnání výhodnosti (cena/plocha).
-- **Svátky & Losování:** Práce s daty a randomizace.
+### 📊 Finance & Produktivita
+- **Měnový konvertor**: Živá data z ČNB (přes CORS proxy).
+- **Investiční kalkulačka**: Vizuální motivace k šetření a složené úročení.
+- **Převodník jednotek**: Univerzální a přesný přepočet fyzikálních veličin.
 
-## 🛠️ Technologie
+---
 
-- **Frontend:** [React 19](https://react.dev/)
-- **Styling:** [Tailwind CSS](https://tailwindcss.com/)
-- **Icons:** Vlastní SVG set (`components/Icons.tsx`)
-- **API:** Open-Meteo, ČNB, QR Server.
-- **Build:** Vite / Vercel
+## 🛠️ Pro vývojáře (Architecture)
 
-## 🚀 Instalace a Spuštění
+Aplikace je navržena jako **modulární registry-based systém**. Přidání nového nástroje trvá minuty.
 
-Projekt je připraven pro nasazení na Vercel, ale lze jej spustit lokálně.
+### Struktura
+- `/tools`: Každý nástroj je samostatná, izolovaná React komponenta.
+- `tools/registry.tsx`: Centrální konfigurace (ID, kategorie, ikona, barvy).
+- `/components`: Sdílené atomické UI komponenty (Shared.tsx, Icons.tsx).
 
-1. **Klonování repozitáře:**
-   ```bash
-   git clone https://github.com/Peter-Pix/scrllcz.git
-   cd scrllcz
-   ```
+### Jak přidat nový nástroj?
+1. Vytvořte soubor `tools/MujNovyNastroj.tsx`.
+2. V `tools/registry.tsx` přidejte nový záznam do pole `tools`.
+3. Hotovo! Nástroj se automaticky objeví v menu i ve vyhledávání.
 
-2. **Instalace závislostí:**
-   ```bash
-   npm install
-   ```
+### Technologie
+- **Core**: React 19, TypeScript
+- **Styling**: Tailwind CSS
+- **Deployment**: Optimized for Vercel / GitHub Actions
+- **Icons**: Custom optimized SVG set
 
-3. **Spuštění vývojového serveru:**
-   ```bash
-   npm run dev
-   ```
+---
 
-## 📂 Struktura Projektu
-
-- `/components` - Sdílené UI komponenty (Tlačítka, Ikony, Karty).
-- `/tools` - Jednotlivé nástroje. Každý nástroj je samostatná komponenta.
-  - `registry.tsx` - Centrální registr nástrojů (konfigurace, ikony, barvy).
-- `index.tsx` - Hlavní vstupní bod, routing a layout aplikace.
-
-## 🤝 Jak přidat nový nástroj
-
-Architektura je navržena tak, aby přidání nástroje bylo triviální:
-
-1. Vytvořte novou komponentu v složce `tools/` (např. `MyNewTool.tsx`).
-2. Otevřete `tools/registry.tsx`.
-3. Importujte komponentu.
-4. Přidejte konfiguraci do pole `tools`:
-   ```typescript
-   {
-     id: 'my-new-tool',
-     title: 'Můj Nový Nástroj',
-     description: 'Popis co to dělá.',
-     icon: <Icons.MyIcon />,
-     component: MyNewTool,
-     color: 'from-blue-500 to-green-500' // Gradient pro dashboard
-   }
-   ```
-
-## 📄 Licence
-
-Tento projekt je licencován pod MIT licencí.
+## 📜 Licence
+MIT &copy; {new Date().getFullYear()} Scrollo.cz.
+Vyvinuto s láskou k čistému kódu a efektivitě.

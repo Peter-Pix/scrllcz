@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Icons } from './components/Icons';
 import { Button, Card } from './components/Shared';
@@ -35,6 +35,7 @@ const App = () => {
   });
 
   const [activeCategory, setActiveCategory] = useState<ToolCategory>('Vše');
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const activeTool = tools.find(t => t.id === currentToolId);
 
@@ -57,22 +58,34 @@ const App = () => {
     );
   };
 
-  const sortedTools = [...tools]
-    .filter(t => activeCategory === 'Vše' || t.category === activeCategory)
-    .sort((a, b) => {
-      const aFav = favorites.includes(a.id);
-      const bFav = favorites.includes(b.id);
-      if (aFav && !bFav) return -1;
-      if (!aFav && bFav) return 1;
-      return 0;
-    });
+  const handleCategoryChange = (cat: ToolCategory) => {
+    if (cat === activeCategory) return;
+    setIsSyncing(true);
+    // Delší čas na plynulý odchod (nádech hladiny)
+    setTimeout(() => {
+      setActiveCategory(cat);
+      setIsSyncing(false);
+    }, 250);
+  };
+
+  const sortedTools = useMemo(() => {
+    return [...tools]
+      .filter(t => activeCategory === 'Vše' || t.category === activeCategory)
+      .sort((a, b) => {
+        const aFav = favorites.includes(a.id);
+        const bFav = favorites.includes(b.id);
+        if (aFav && !bFav) return -1;
+        if (!aFav && bFav) return 1;
+        return 0;
+      });
+  }, [activeCategory, favorites]);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 font-sans selection:bg-indigo-500/30">
       <header className="fixed top-0 w-full bg-slate-950/80 backdrop-blur-md border-b border-white/5 z-50">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div 
-            onClick={() => { setCurrentToolId(null); setActiveCategory('Vše'); }} 
+            onClick={() => { setCurrentToolId(null); handleCategoryChange('Vše'); }} 
             className="flex items-center gap-3 cursor-pointer group"
           >
             <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-500/20 group-hover:shadow-indigo-500/40 transition-all">
@@ -93,7 +106,7 @@ const App = () => {
         
         {!currentToolId && (
           <div className="animate-fade-in-up">
-            <div className="text-center mb-8 sm:mb-12 space-y-4">
+            <div className="text-center mb-10 sm:mb-14 space-y-4">
               <h1 className="text-3xl sm:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400">
                 Sada užitečných nástrojů
               </h1>
@@ -102,64 +115,69 @@ const App = () => {
               </p>
             </div>
 
-            {/* Dot Filter System */}
-            <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-4 mb-10 sm:mb-16 px-4">
+            {/* Liquid Pill Filter System */}
+            <div className="flex flex-wrap justify-center items-center gap-4 mb-14 sm:mb-24 px-4 min-h-[48px]">
                {CATEGORIES.map((cat) => {
                  const isActive = activeCategory === cat.label;
                  return (
                    <button
                      key={cat.label}
-                     onClick={() => setActiveCategory(cat.label)}
+                     onClick={() => handleCategoryChange(cat.label)}
                      className={`
-                       relative flex items-center transition-all duration-500 ease-out overflow-hidden
+                       group relative flex items-center justify-center transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] overflow-hidden
                        ${isActive 
-                         ? `px-5 py-2.5 rounded-full ${cat.color} text-white shadow-lg ring-4 ring-white/5` 
-                         : 'w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-800 hover:scale-125 hover:bg-slate-700'
+                         ? `w-auto px-8 h-11 sm:h-12 rounded-full ${cat.color} text-white shadow-2xl ring-4 ring-white/10 scale-105` 
+                         : 'w-5 h-5 rounded-full bg-slate-900 hover:bg-slate-800 hover:scale-125'
                        }
                      `}
                      title={cat.label}
                    >
-                     {isActive && (
-                       <span className="whitespace-nowrap text-xs sm:text-sm font-black uppercase tracking-widest animate-fade-in">
-                         {cat.label}
-                       </span>
-                     )}
+                     {/* Label fade animation */}
+                     <span className={`
+                        whitespace-nowrap text-xs sm:text-sm font-black uppercase tracking-[0.15em] transition-all duration-500
+                        ${isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-50 pointer-events-none w-0 overflow-hidden'}
+                     `}>
+                        {cat.label}
+                     </span>
+                     
+                     {/* Hidden color dot for expansion effect */}
                      {!isActive && (
-                        <div className={`absolute inset-0 rounded-full ${cat.color} opacity-40 shadow-[0_0_10px_rgba(255,255,255,0.1)]`} />
+                        <div className={`absolute inset-0 rounded-full ${cat.color} opacity-20 blur-[1px] group-hover:opacity-60 transition-opacity`} />
                      )}
                    </button>
                  );
                })}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {sortedTools.map((tool) => {
+            {/* Grid with stable plane transition - Enhanced Smoothness */}
+            <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] ${isSyncing ? 'opacity-0 blur-lg scale-[0.97] -translate-y-2' : 'opacity-100 blur-0 scale-100 translate-y-0'}`}>
+              {sortedTools.map((tool, index) => {
                 const isFav = favorites.includes(tool.id);
                 return (
                   <div 
                     key={tool.id}
                     onClick={() => setCurrentToolId(tool.id)}
-                    className="group relative bg-slate-900 border border-slate-800 rounded-2xl p-6 hover:border-indigo-500/50 hover:bg-slate-800/50 transition-all duration-300 cursor-pointer overflow-hidden"
+                    className="group relative bg-slate-900/80 border border-slate-800 rounded-3xl p-7 hover:border-indigo-500/40 hover:bg-slate-800/80 transition-all duration-500 cursor-pointer overflow-hidden animate-staggered-fade shadow-sm hover:shadow-2xl hover:-translate-y-1"
+                    style={{ animationDelay: `${index * 45}ms` }}
                   >
-                    <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${tool.color} opacity-10 blur-2xl rounded-bl-full group-hover:opacity-20 transition-opacity`} />
+                    <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${tool.color} opacity-5 blur-3xl rounded-bl-full group-hover:opacity-15 transition-opacity duration-700`} />
                     
                     <button 
                       onClick={(e) => toggleFavorite(e, tool.id)}
-                      className={`absolute top-4 right-4 z-20 p-1.5 rounded-full transition-all duration-200 ${isFav ? 'text-yellow-400 bg-yellow-400/10' : 'text-slate-600 hover:text-yellow-400 hover:bg-slate-700'}`}
-                      title={isFav ? "Odebrat z oblíbených" : "Přidat do oblíbených"}
+                      className={`absolute top-6 right-6 z-20 p-2 rounded-full transition-all duration-300 ${isFav ? 'text-yellow-400 bg-yellow-400/10 scale-110' : 'text-slate-700 hover:text-yellow-400 hover:bg-slate-700'}`}
                     >
                       {isFav ? <Icons.Star /> : <Icons.StarOutline />}
                     </button>
 
                     <div className="relative z-10">
-                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${tool.color} flex items-center justify-center text-white shadow-lg mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                      <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${tool.color} flex items-center justify-center text-white shadow-xl mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500`}>
                         {tool.icon}
                       </div>
                       
-                      <h3 className="text-xl font-bold text-white mb-2 group-hover:text-indigo-200 transition-colors flex items-center gap-2">
+                      <h3 className="text-xl font-bold text-white mb-3 group-hover:text-indigo-200 transition-colors flex items-center gap-2">
                         {tool.title}
                       </h3>
-                      <p className="text-slate-400 text-sm leading-relaxed">
+                      <p className="text-slate-400 text-sm leading-relaxed opacity-80 group-hover:opacity-100">
                         {tool.description}
                       </p>
                     </div>
@@ -167,25 +185,25 @@ const App = () => {
                 );
               })}
             </div>
-            {sortedTools.length === 0 && (
-              <div className="text-center py-20">
-                <p className="text-slate-500">V této kategorii zatím nejsou žádné nástroje.</p>
+            
+            {sortedTools.length === 0 && !isSyncing && (
+              <div className="text-center py-32 animate-fade-in">
+                <p className="text-slate-600 font-medium italic">V této kategorii zatím nejsou žádné nástroje.</p>
               </div>
             )}
           </div>
         )}
 
         {activeTool && (
-          <div className="animate-fade-in">
-            <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-2 px-1">
+          <div className="animate-fade-in-up">
+            <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 px-1">
                <div>
-                 <h2 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
-                   <span className={`w-2 sm:w-3 h-6 sm:h-8 rounded-full bg-gradient-to-b ${activeTool.color}`} />
+                 <h2 className="text-3xl sm:text-4xl font-black text-white flex items-center gap-4">
+                   <span className={`w-2.5 h-10 rounded-full bg-gradient-to-b ${activeTool.color}`} />
                    {activeTool.title}
                    <button 
                       onClick={(e) => toggleFavorite(e, activeTool.id)}
-                      className={`ml-1 text-xl transition-colors ${favorites.includes(activeTool.id) ? 'text-yellow-400' : 'text-slate-700 hover:text-yellow-400'}`}
-                      title="Oblíbené"
+                      className={`ml-1 text-2xl transition-all hover:scale-110 ${favorites.includes(activeTool.id) ? 'text-yellow-400' : 'text-slate-800 hover:text-yellow-400'}`}
                    >
                       {favorites.includes(activeTool.id) ? <Icons.Star /> : <Icons.StarOutline />}
                    </button>
@@ -193,7 +211,7 @@ const App = () => {
                </div>
             </div>
             
-            <Card className={`min-h-[400px] p-2 sm:p-6`}>
+            <Card className={`min-h-[500px] p-4 sm:p-10 shadow-2xl ring-1 ring-white/5`}>
               <activeTool.component />
             </Card>
           </div>
@@ -201,21 +219,30 @@ const App = () => {
 
       </main>
 
-      <footer className="border-t border-white/5 py-8 text-center text-slate-600 text-sm">
-         <p>&copy; {new Date().getFullYear()} Scrollo.cz &bull; Vytvořil Petr Piskáček</p>
+      <footer className="border-t border-white/5 py-12 text-center text-slate-700 text-sm">
+         <p>&copy; {new Date().getFullYear()} Scrollo.cz &bull; S úctou k detailu Petr Piskáček</p>
       </footer>
 
       <style>{`
         @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(20px); }
+          from { opacity: 0; transform: translateY(30px); }
           to { opacity: 1; transform: translateY(0); }
         }
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
         }
-        .animate-fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
-        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes staggeredFade {
+          from { opacity: 0; transform: scale(0.9) translateY(40px) rotateX(10deg); filter: blur(10px); }
+          to { opacity: 1; transform: scale(1) translateY(0) rotateX(0); filter: blur(0); }
+        }
+        .animate-fade-in-up { animation: fadeInUp 0.8s cubic-bezier(0.19, 1, 0.22, 1) forwards; }
+        .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
+        .animate-staggered-fade { animation: staggeredFade 0.75s cubic-bezier(0.19, 1, 0.22, 1) both; }
+        
+        /* Zjemnění scrollování a interakcí */
+        html { scroll-behavior: smooth; }
+        body { -webkit-font-smoothing: antialiased; }
       `}</style>
     </div>
   );
