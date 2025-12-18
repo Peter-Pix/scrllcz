@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Icons } from '../components/Icons';
-import { Button } from '../components/Shared';
+import { Button, Modal } from '../components/Shared';
 
 interface Note {
   id: string;
@@ -29,7 +29,8 @@ export const QuickNotesTool = () => {
   });
 
   const [lastAdjective, setLastAdjective] = useState("");
-  const historiesRef = useRef<Record<string, { past: string[], future: string[] }>>({});
+  const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
+  
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
 
@@ -54,96 +55,46 @@ export const QuickNotesTool = () => {
       minimized: false
     };
     setNotes(prev => [newNote, ...prev]);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const updateNote = (id: string, updates: Partial<Note>) => {
     setNotes(prev => prev.map(n => n.id === id ? { ...n, ...updates } : n));
   };
 
-  const deleteNote = (id: string) => {
-    if (window.confirm('Smazat tuto poznámku?')) {
-      setNotes(prev => prev.filter(n => n.id !== id));
-      delete historiesRef.current[id];
+  const confirmDeleteNote = () => {
+    if (noteToDelete) {
+      setNotes(prev => prev.filter(n => n.id !== noteToDelete));
+      setNoteToDelete(null);
     }
   };
 
-  // Keyboard Logic
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>, id: string) => {
-    const textarea = e.currentTarget;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const val = textarea.value;
-
-    // Tab (Indent)
     if (e.key === 'Tab') {
       e.preventDefault();
-      if (!e.shiftKey) {
-        const newVal = val.substring(0, start) + "\t" + val.substring(end);
-        updateNote(id, { content: newVal });
-        setTimeout(() => {
-          textarea.selectionStart = textarea.selectionEnd = start + 1;
-        }, 0);
-      } else {
-        // Outdent
-        if (val.substring(start - 1, start) === "\t") {
-          const newVal = val.substring(0, start - 1) + val.substring(start);
-          updateNote(id, { content: newVal });
-          setTimeout(() => {
-            textarea.selectionStart = textarea.selectionEnd = start - 1;
-          }, 0);
-        }
-      }
-    }
-
-    // Page Break (Ctrl + Enter)
-    if (e.key === 'Enter' && e.ctrlKey) {
-      e.preventDefault();
-      const newVal = val.substring(0, start) + "\n\n--- NOVÁ STRANA ---\n\n" + val.substring(end);
-      updateNote(id, { content: newVal });
-    }
-
-    // New Paragraph (Enter) vs New Line (Shift+Enter)
-    if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
-      e.preventDefault();
-      const newVal = val.substring(0, start) + "\n\n" + val.substring(end);
+      const textarea = e.currentTarget;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const val = textarea.value;
+      const newVal = val.substring(0, start) + "\t" + val.substring(end);
       updateNote(id, { content: newVal });
       setTimeout(() => {
-        textarea.selectionStart = textarea.selectionEnd = start + 2;
+        textarea.selectionStart = textarea.selectionEnd = start + 1;
       }, 0);
     }
   };
 
   const exportNote = (note: Note) => {
     const now = new Date(note.createdAt);
-    const timeStr = now.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
-    const dateStr = now.toLocaleDateString('cs-CZ');
-    
-    // Determine final name
-    let finalTitle = note.title.trim();
-    const isPlaceholder = ADJECTIVES.some(adj => finalTitle.toLowerCase().includes(adj));
-    
-    if (isPlaceholder && note.content.trim()) {
-      const words = note.content.trim().split(/\s+/).slice(0, 2);
-      if (words.length > 0) finalTitle = words.join(' ');
-    }
-    
-    if (!finalTitle) finalTitle = "Nepojmenovaná poznámka";
-
-    // Update app title for consistency
-    updateNote(note.id, { title: finalTitle });
-
-    const footer = `\n\nVytvořeno:\n--------------------------------\n Čas ${timeStr} / Datum ${dateStr}\n--------------------------------`;
+    const footer = `\n\nExportováno ze Scrollo.cz\nDatum: ${now.toLocaleDateString('cs-CZ')}`;
     const blob = new Blob([note.content + footer], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${finalTitle}.txt`;
+    link.download = `${note.title || 'Poznámka'}.txt`;
     link.click();
     URL.revokeObjectURL(url);
   };
 
-  // Drag & Drop logic
   const handleSort = () => {
     if (dragItem.current === null || dragOverItem.current === null) return;
     const _notes = [...notes];
@@ -155,16 +106,44 @@ export const QuickNotesTool = () => {
   };
 
   return (
-    <div className="relative pb-20 sm:pb-0 -mx-1 sm:mx-0">
-      <div className="hidden sm:flex justify-end mb-6">
-        <Button onClick={addNote} className="bg-indigo-600 hover:bg-indigo-500 shadow-xl">
-          <Icons.Plus /> Nová poznámka
+    <div className="relative pb-20 sm:pb-0">
+      {/* Delete Note Modal */}
+      <Modal 
+        isOpen={!!noteToDelete} 
+        onClose={() => setNoteToDelete(null)} 
+        title="Smazat poznámku"
+        variant="danger"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setNoteToDelete(null)}>Zrušit</Button>
+            <Button variant="danger" onClick={confirmDeleteNote}>Odstranit</Button>
+          </>
+        }
+      >
+        Opravdu chcete tuto poznámku nenávratně smazat?
+      </Modal>
+
+      <div className="flex justify-between items-center mb-8 px-2">
+        <div className="flex items-center gap-3">
+           <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-500">
+             <Icons.Note />
+           </div>
+           <div>
+             <h3 className="text-white font-bold text-lg">Nástěnka poznámek</h3>
+             <p className="text-slate-500 text-xs uppercase tracking-widest font-black">{notes.length} celkem</p>
+           </div>
+        </div>
+        <Button onClick={addNote} className="bg-indigo-600 hover:bg-indigo-500 shadow-xl shadow-indigo-900/20">
+          <Icons.Plus /> <span className="hidden sm:inline">Nová poznámka</span>
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
+      {/* Dynamic Flex Flow Grid */}
+      <div className="flex flex-wrap gap-4 items-start content-start min-h-[300px]">
         {notes.map((note, index) => {
           const noteDate = new Date(note.createdAt);
+          const isMinimized = note.minimized;
+          
           return (
             <div 
               key={note.id} 
@@ -173,74 +152,86 @@ export const QuickNotesTool = () => {
               onDragEnter={() => (dragOverItem.current = index)}
               onDragEnd={handleSort}
               onDragOver={(e) => e.preventDefault()}
-              className={`flex flex-col bg-slate-900 border border-slate-800 rounded-2xl shadow-xl hover:border-indigo-500/30 transition-all cursor-default ${note.minimized ? 'opacity-80 scale-95' : ''}`}
+              className={`
+                relative flex flex-col bg-slate-900 border transition-all duration-500 ease-in-out group
+                ${isMinimized 
+                  ? 'w-full sm:w-[calc(50%-8px)] lg:w-[calc(25%-12px)] border-slate-800 hover:border-indigo-500/50 hover:bg-slate-800/40 rounded-xl' 
+                  : 'w-full border-slate-700 shadow-2xl rounded-2xl ring-1 ring-white/5'
+                }
+                ${dragItem.current === index ? 'opacity-20' : 'opacity-100'}
+              `}
             >
-              {/* Note Header */}
-              <div className="flex items-center justify-between p-2 sm:p-4 gap-2 relative">
-                {/* Minimize Dot */}
+              {/* Header */}
+              <div className={`flex items-center p-3 sm:p-4 gap-2 select-none cursor-move min-w-0`}>
                 <button 
-                  onClick={() => updateNote(note.id, { minimized: !note.minimized })}
-                  className={`absolute top-2 left-2 w-2 h-2 rounded-full transition-all z-20 ${note.minimized ? 'bg-indigo-500 shadow-[0_0_8px_#6366f1]' : 'bg-slate-700 hover:bg-indigo-400'}`}
-                  title={note.minimized ? "Rozbalit" : "Minimalizovat"}
-                />
+                  onClick={() => updateNote(note.id, { minimized: !isMinimized })}
+                  className={`p-1.5 rounded-lg transition-all flex-shrink-0 ${isMinimized ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-500 hover:text-white hover:bg-slate-800'}`}
+                  title={isMinimized ? "Rozbalit" : "Sbalit"}
+                >
+                  <svg className={`w-4 h-4 transform transition-transform duration-300 ${isMinimized ? '-rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
 
                 <input 
                   type="text" 
                   value={note.title}
                   onChange={e => updateNote(note.id, { title: e.target.value })}
-                  placeholder="Zadejte název..."
-                  className={`bg-transparent border-none text-white font-bold text-sm focus:outline-none placeholder-slate-700 flex-1 min-w-0 pl-4 transition-all ${note.minimized ? 'text-slate-400' : ''}`}
+                  placeholder="Název poznámky..."
+                  className={`bg-transparent border-none text-white font-bold transition-all focus:outline-none placeholder-slate-700 flex-1 min-w-0 truncate ${isMinimized ? 'text-sm' : 'text-base'}`}
                 />
 
-                <div className="flex items-center bg-slate-950/50 rounded-lg p-0.5 border border-slate-800/50">
-                  <button onClick={() => exportNote(note)} className="p-1.5 text-slate-500 hover:text-emerald-400 transition-colors" title="Uložit"><Icons.Download /></button>
-                  <button onClick={() => deleteNote(note.id)} className="p-1.5 text-slate-500 hover:text-rose-500 transition-colors" title="Smazat"><Icons.Trash /></button>
+                <div className={`flex items-center gap-1 flex-shrink-0 transition-all ${isMinimized ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
+                  <button onClick={() => exportNote(note)} className="p-1.5 text-slate-500 hover:text-emerald-400 transition-colors" title="Uložit jako .txt"><Icons.Download /></button>
+                  <button onClick={() => setNoteToDelete(note.id)} className="p-1.5 text-slate-500 hover:text-rose-500 transition-colors" title="Smazat"><Icons.Trash /></button>
                 </div>
               </div>
 
-              {/* Note Body */}
-              {!note.minimized && (
-                <div className="px-2 pb-2 sm:px-4 sm:pb-4 animate-fade-in">
+              {/* Content Area */}
+              <div className={`px-4 transition-all duration-500 overflow-hidden ${isMinimized ? 'max-h-0 opacity-0' : 'max-h-[1000px] opacity-100 pb-4'}`}>
+                <div className="relative">
                   <textarea
                     value={note.content}
                     onKeyDown={(e) => handleKeyDown(e, note.id)}
                     onChange={e => updateNote(note.id, { content: e.target.value })}
-                    onMouseUp={e => {
-                      const target = e.target as HTMLTextAreaElement;
-                      if (target.offsetHeight !== note.height) {
-                        updateNote(note.id, { height: target.offsetHeight });
-                      }
-                    }}
-                    style={{ height: note.height || 180 }}
-                    placeholder="Začněte psát... (Enter = odstavec, Shift+Enter = řádek, Tab = odsazení)"
-                    className="w-full bg-slate-950/40 border border-slate-800 rounded-xl p-3 text-slate-200 text-sm placeholder-slate-800 focus:outline-none focus:border-indigo-500/50 resize-y leading-relaxed custom-scrollbar font-sans"
+                    style={{ height: note.height || 220 }}
+                    placeholder="Začněte psát své myšlenky..."
+                    className="w-full bg-slate-950/50 border border-slate-800 rounded-xl p-4 text-slate-200 text-sm placeholder-slate-800 focus:outline-none focus:border-indigo-500/50 resize-y leading-relaxed font-sans"
                   />
-                  
-                  <div className="mt-2 flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-slate-600 px-1">
-                    <span>{noteDate.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })} / {noteDate.toLocaleDateString('cs-CZ')}</span>
-                    <span>{note.content.length} znaků</span>
+                  <div className="absolute bottom-2 right-2 text-slate-800 pointer-events-none">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 10.293a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414l6-6a1 1 0 011.414 0zM12.707 6.293a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414l6-6a1 1 0 011.414 0z" /></svg>
                   </div>
                 </div>
-              )}
-
-              {note.minimized && (
-                <div className="px-4 pb-3 flex justify-between items-center">
-                   <span className="text-[10px] text-slate-600 italic">Kliknutím na tečku rozbalíte</span>
-                   <span className="text-[10px] font-mono text-slate-700">{noteDate.toLocaleDateString('cs-CZ')}</span>
+                
+                <div className="mt-4 flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-600 px-1 border-t border-slate-800/50 pt-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-1 h-1 rounded-full bg-slate-700"></span>
+                    <span>{noteDate.toLocaleDateString('cs-CZ')} {noteDate.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                  <span>{note.content.length} znaků</span>
                 </div>
+              </div>
+
+              {/* Indicator for Minimized state content */}
+              {isMinimized && note.content.trim().length > 0 && (
+                <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-indigo-500/20 rounded-full mb-1"></div>
               )}
             </div>
           );
         })}
+
+        {notes.length === 0 && (
+          <div className="w-full text-center py-20 bg-slate-900/20 border-2 border-dashed border-slate-800 rounded-3xl animate-fade-in">
+            <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-600">
+               <Icons.Note />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">Vaše nástěnka je prázdná</h3>
+            <p className="text-slate-500 max-w-xs mx-auto mb-2 px-4 text-sm">Zachyťte své nápady dříve, než uletí. Každá velká věc začala jednou malou poznámkou.</p>
+          </div>
+        )}
       </div>
 
-      {notes.length === 0 && (
-        <div className="text-center py-20 bg-slate-900/20 border-2 border-dashed border-slate-800 rounded-3xl">
-          <p className="text-slate-500">Žádné poznámky. Začněte kliknutím na tlačítko.</p>
-        </div>
-      )}
-
-      {/* Mobile FAB */}
+      {/* Floating Action Button (Mobile only) */}
       <button 
         onClick={addNote}
         className="sm:hidden fixed bottom-6 right-6 w-14 h-14 bg-indigo-600 text-white rounded-full shadow-2xl flex items-center justify-center z-50 active:scale-90 transition-transform border-4 border-slate-950"
@@ -250,8 +241,9 @@ export const QuickNotesTool = () => {
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 10px; }
-        textarea { tab-size: 4; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #334155; }
       `}</style>
     </div>
   );

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Icons } from '../components/Icons';
-import { Button } from '../components/Shared';
+import { Button, Modal } from '../components/Shared';
 
 interface ShoppingItem {
   id: string;
@@ -21,6 +21,7 @@ export const ShoppingListTool = () => {
   });
 
   const [inputText, setInputText] = useState('');
+  const [clearMode, setClearMode] = useState<'completed' | 'all' | null>(null);
 
   // Persistence
   useEffect(() => {
@@ -52,21 +53,13 @@ export const ShoppingListTool = () => {
     setItems(prev => prev.filter(item => item.id !== id));
   };
 
-  const clearCompleted = () => {
-    const hasCompleted = items.some(i => i.completed);
-    if (!hasCompleted) return;
-    
-    if (window.confirm('Smazat všechny nakoupené položky ze seznamu?')) {
+  const confirmClear = () => {
+    if (clearMode === 'completed') {
       setItems(prev => prev.filter(item => !item.completed));
-    }
-  };
-
-  const clearAll = () => {
-    if (items.length === 0) return;
-    
-    if (window.confirm('Opravdu chcete smazat celý nákupní seznam?')) {
+    } else if (clearMode === 'all') {
       setItems([]);
     }
+    setClearMode(null);
   };
 
   // Stats & Sorting
@@ -87,6 +80,24 @@ export const ShoppingListTool = () => {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      {/* Confirmation Modal */}
+      <Modal 
+        isOpen={!!clearMode} 
+        onClose={() => setClearMode(null)} 
+        title={clearMode === 'all' ? "Vymazat celý seznam" : "Odstranit nakoupené"}
+        variant="danger"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setClearMode(null)}>Zrušit</Button>
+            <Button variant="danger" onClick={confirmClear}>Potvrdit</Button>
+          </>
+        }
+      >
+        {clearMode === 'all' 
+          ? "Opravdu chcete smazat úplně všechny položky z nákupního seznamu?" 
+          : "Přejete si odstranit všechny položky, které již máte označené jako nakoupené?"}
+      </Modal>
+
       {/* Header & Input */}
       <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-4">
         <h3 className="text-xl font-bold text-white flex items-center gap-2">
@@ -100,7 +111,6 @@ export const ShoppingListTool = () => {
             onChange={e => setInputText(e.target.value)}
             placeholder="Mléko, chleba, ovoce..."
             className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-indigo-500 outline-none transition-colors"
-            autoFocus
           />
           <Button type="submit" disabled={!inputText.trim()} className="bg-indigo-600 hover:bg-indigo-500">
             <Icons.Plus /> Přidat
@@ -131,15 +141,15 @@ export const ShoppingListTool = () => {
           </span>
           <div className="flex gap-4">
             <button 
-              onClick={clearCompleted}
-              className="text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-all uppercase tracking-widest disabled:opacity-30 disabled:cursor-not-allowed disabled:grayscale"
+              onClick={() => setClearMode('completed')}
+              className="text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-all uppercase tracking-widest disabled:opacity-30"
               disabled={!items.some(i => i.completed)}
             >
               Smazat koupené
             </button>
             <button 
-              onClick={clearAll}
-              className="text-xs font-bold text-rose-400 hover:text-rose-300 transition-all uppercase tracking-widest disabled:opacity-30 disabled:cursor-not-allowed disabled:grayscale"
+              onClick={() => setClearMode('all')}
+              className="text-xs font-bold text-rose-400 hover:text-rose-300 transition-all uppercase tracking-widest"
             >
               Vymazat vše
             </button>
@@ -185,17 +195,12 @@ export const ShoppingListTool = () => {
               <button 
                 onClick={(e) => { e.stopPropagation(); removeItem(item.id); }}
                 className="p-2 text-slate-600 hover:text-rose-400 transition-colors sm:opacity-0 group-hover:opacity-100"
-                title="Odstranit"
               >
                 <Icons.Trash />
               </button>
             </div>
           ))
         )}
-      </div>
-
-      <div className="bg-slate-900/30 border border-slate-800 p-4 rounded-xl text-slate-500 text-xs text-center">
-        🛒 Tip: Položky můžete odškrtávat přímo v obchodě na mobilu. Seznam se neztratí ani po zavření okna.
       </div>
     </div>
   );

@@ -1,13 +1,14 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Icons } from '../components/Icons';
-import { Button } from '../components/Shared';
+import { Button, Modal } from '../components/Shared';
 
 export const AudioTrimmerTool = () => {
   const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null);
   const [fileName, setFileName] = useState('');
   const [loading, setLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [errorModal, setErrorModal] = useState<string | null>(null);
   
   // Trimming states (in seconds)
   const [startTime, setStartTime] = useState(0);
@@ -56,7 +57,7 @@ export const AudioTrimmerTool = () => {
       setTimeout(() => drawWaveform(buffer), 50);
     } catch (err) {
       console.error("Chyba při dekódování audia:", err);
-      alert("Nepodařilo se načíst audio soubor. Zkuste jiný formát (MP3, WAV, OGG).");
+      setErrorModal("Nepodařilo se načíst tento audio soubor. Ujistěte se, že jde o platný formát jako MP3, WAV nebo OGG.");
     } finally {
       setLoading(false);
     }
@@ -261,6 +262,16 @@ export const AudioTrimmerTool = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
+      {/* Nice Error Modal */}
+      <Modal 
+        isOpen={!!errorModal} 
+        onClose={() => setErrorModal(null)} 
+        title="Chyba při nahrávání"
+        variant="warning"
+      >
+        {errorModal}
+      </Modal>
+
       {!audioBuffer ? (
         <div 
           onClick={() => fileInputRef.current?.click()}

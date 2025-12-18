@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Icons } from '../components/Icons';
-import { Button } from '../components/Shared';
+import { Button, Modal } from '../components/Shared';
 
 type DebtType = 'owe' | 'owed';
 
@@ -28,6 +28,7 @@ export const DebtListTool = () => {
   const [activeTab, setActiveTab] = useState<DebtType>('owe');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -101,17 +102,34 @@ export const DebtListTool = () => {
     setIsFormOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Opravdu chcete tento záznam smazat?')) {
-      setDebts(prev => prev.filter(d => d.id !== id));
+  const confirmDelete = () => {
+    if (deleteId) {
+      setDebts(prev => prev.filter(d => d.id !== deleteId));
+      setDeleteId(null);
     }
   };
 
   return (
     <div className="space-y-6">
+      {/* Delete Modal */}
+      <Modal 
+        isOpen={!!deleteId} 
+        onClose={() => setDeleteId(null)} 
+        title="Odstranit záznam"
+        variant="danger"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setDeleteId(null)}>Zrušit</Button>
+            <Button variant="danger" onClick={confirmDelete}>Smazat</Button>
+          </>
+        }
+      >
+        Opravdu si přejete smazat tento záznam o dluhu? Akci nelze vrátit.
+      </Modal>
+
       {/* Dashboard Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className={`p-6 rounded-2xl border transition-all ${activeTab === 'owe' ? 'bg-rose-900/10 border-rose-500/50 shadow-lg shadow-rose-900/20' : 'bg-slate-900 border-slate-800 opacity-60'}`} onClick={() => setActiveTab('owe')}>
+        <div className={`p-6 rounded-2xl border cursor-pointer transition-all ${activeTab === 'owe' ? 'bg-rose-900/10 border-rose-500/50 shadow-lg shadow-rose-900/20' : 'bg-slate-900 border-slate-800 opacity-60'}`} onClick={() => setActiveTab('owe')}>
            <div className="flex justify-between items-center mb-1">
              <div className="text-xs font-bold uppercase tracking-wider text-rose-400">Dlužím celkem</div>
              <div className="text-rose-500/50"><Icons.Receipt /></div>
@@ -119,7 +137,7 @@ export const DebtListTool = () => {
            <div className="text-3xl font-black text-white">{totals.oweTotal.toLocaleString('cs-CZ')} Kč</div>
         </div>
 
-        <div className={`p-6 rounded-2xl border transition-all ${activeTab === 'owed' ? 'bg-emerald-900/10 border-emerald-500/50 shadow-lg shadow-emerald-900/20' : 'bg-slate-900 border-slate-800 opacity-60'}`} onClick={() => setActiveTab('owed')}>
+        <div className={`p-6 rounded-2xl border cursor-pointer transition-all ${activeTab === 'owed' ? 'bg-emerald-900/10 border-emerald-500/50 shadow-lg shadow-emerald-900/20' : 'bg-slate-900 border-slate-800 opacity-60'}`} onClick={() => setActiveTab('owed')}>
            <div className="flex justify-between items-center mb-1">
              <div className="text-xs font-bold uppercase tracking-wider text-emerald-400">Dluží mi celkem</div>
              <div className="text-emerald-500/50"><Icons.Receipt /></div>
@@ -133,7 +151,7 @@ export const DebtListTool = () => {
          <div className="flex gap-2 w-full sm:w-auto">
             <button 
                onClick={() => setActiveTab('owe')}
-               className={`flex-1 sm:flex-none px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${activeTab === 'owe' ? 'bg-rose-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
+               className={`flex-1 sm:flex-none px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${activeTab === 'owe' ? 'bg-rose-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
             >
                Dlužím
             </button>
@@ -170,7 +188,6 @@ export const DebtListTool = () => {
                   placeholder="Např. Petr, Banka, Alza..."
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:border-indigo-500 outline-none transition-colors"
                   required
-                  autoFocus
                 />
               </div>
 
@@ -255,7 +272,7 @@ export const DebtListTool = () => {
                       <button onClick={() => handleEdit(debt)} className="p-2 text-slate-500 hover:text-indigo-400 transition-colors bg-slate-950 rounded-lg border border-slate-800">
                          <Icons.Pencil />
                       </button>
-                      <button onClick={() => handleDelete(debt.id)} className="p-2 text-slate-500 hover:text-red-400 transition-colors bg-slate-950 rounded-lg border border-slate-800">
+                      <button onClick={() => setDeleteId(debt.id)} className="p-2 text-slate-500 hover:text-red-400 transition-colors bg-slate-950 rounded-lg border border-slate-800">
                          <Icons.Trash />
                       </button>
                    </div>
@@ -264,11 +281,6 @@ export const DebtListTool = () => {
            ))}
         </div>
       )}
-
-      {/* Privacy Notice */}
-      <div className="bg-slate-900/30 border border-slate-800 p-4 rounded-xl text-slate-500 text-xs text-center">
-         🔒 Všechna data o dluzích jsou uložena pouze ve vašem prohlížeči. Nikdo jiný k nim nemá přístup.
-      </div>
     </div>
   );
 };

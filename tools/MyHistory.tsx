@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { Icons } from '../components/Icons';
-import { Button, Card } from '../components/Shared';
+import { Button, Modal } from '../components/Shared';
 
 type EventType = 'milestone' | 'normal' | 'goal';
 
@@ -25,6 +26,7 @@ export const MyHistoryTool = () => {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   
   // Form State
   const [formData, setFormData] = useState({
@@ -97,14 +99,31 @@ export const MyHistoryTool = () => {
     setIsFormOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Opravdu chcete tuto událost smazat?')) {
-      setEvents(prev => prev.filter(ev => ev.id !== id));
+  const confirmDelete = () => {
+    if (deleteConfirmId) {
+      setEvents(prev => prev.filter(ev => ev.id !== deleteConfirmId));
+      setDeleteConfirmId(null);
     }
   };
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
+      {/* Delete Confirmation Modal */}
+      <Modal 
+        isOpen={!!deleteConfirmId} 
+        onClose={() => setDeleteConfirmId(null)} 
+        title="Odstranit z historie"
+        variant="danger"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setDeleteConfirmId(null)}>Zrušit</Button>
+            <Button variant="danger" onClick={confirmDelete}>Smazat záznam</Button>
+          </>
+        }
+      >
+        Opravdu si přejete smazat tento moment z vaší časové osy? Tuto akci nelze vzít zpět.
+      </Modal>
+
       {/* Header & Stats */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900/50 p-6 rounded-2xl border border-slate-800">
         <div className="flex gap-6">
@@ -126,7 +145,7 @@ export const MyHistoryTool = () => {
         </Button>
       </div>
 
-      {/* Editor Modal/Panel Overlay */}
+      {/* Editor Modal Overlay */}
       {isFormOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 w-full max-w-lg shadow-2xl relative">
@@ -214,7 +233,6 @@ export const MyHistoryTool = () => {
           <div className="absolute left-4 sm:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-indigo-500/50 via-slate-800 to-teal-500/50 -translate-x-1/2" />
 
           <div className="space-y-16">
-            {/* Fix: Explicitly cast Object.entries result to fix 'Property map does not exist on type unknown' error */}
             {(Object.entries(groupedEvents) as [string, LifeEvent[]][]).map(([year, yearEvents]) => (
               <div key={year} className="relative">
                 {/* Year Badge */}
@@ -232,15 +250,12 @@ export const MyHistoryTool = () => {
                     
                     return (
                       <div key={event.id} className={`flex flex-col sm:flex-row items-start sm:items-center w-full ${isLeft ? 'sm:flex-row' : 'sm:flex-row-reverse'}`}>
-                        {/* Empty side for layout on desktop */}
                         <div className="hidden sm:block w-1/2" />
                         
-                        {/* Timeline Node */}
                         <div className="absolute left-4 sm:left-1/2 -translate-x-1/2 w-4 h-4 rounded-full border-4 border-slate-950 z-20 flex items-center justify-center">
                            <div className={`w-full h-full rounded-full ${isMilestone ? 'bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.6)]' : isGoal ? 'bg-teal-500 shadow-[0_0_15px_rgba(20,184,166,0.6)]' : 'bg-slate-700'}`} />
                         </div>
 
-                        {/* Event Card */}
                         <div className={`w-full sm:w-1/2 pl-10 sm:pl-0 ${isLeft ? 'sm:pr-12' : 'sm:pl-12'} animate-fade-in-up`}>
                           <div className={`group bg-slate-900 border ${isMilestone ? 'border-indigo-500/30 bg-indigo-500/5 shadow-indigo-500/5' : isGoal ? 'border-teal-500/30 border-dashed bg-teal-500/5' : 'border-slate-800'} p-5 rounded-2xl transition-all hover:-translate-y-1 hover:shadow-xl`}>
                             <div className="flex justify-between items-start mb-2">
@@ -253,7 +268,7 @@ export const MyHistoryTool = () => {
                                 <button onClick={() => handleEdit(event)} className="p-1 text-slate-500 hover:text-indigo-400 transition-colors">
                                   <Icons.Pencil />
                                 </button>
-                                <button onClick={() => handleDelete(event.id)} className="p-1 text-slate-500 hover:text-red-400 transition-colors">
+                                <button onClick={() => setDeleteConfirmId(event.id)} className="p-1 text-slate-500 hover:text-red-400 transition-colors">
                                   <Icons.Trash />
                                 </button>
                               </div>
@@ -273,22 +288,14 @@ export const MyHistoryTool = () => {
               </div>
             ))}
           </div>
-          
-          <div className="text-center py-20">
-             <div className="inline-block p-1 bg-slate-900 rounded-full">
-               <div className="w-2 h-2 rounded-full bg-slate-800"></div>
-             </div>
-          </div>
         </div>
       )}
 
-      {/* Manual & Privacy Notice */}
       <div className="bg-slate-900/30 border border-slate-800 p-6 rounded-2xl text-slate-500 text-xs leading-relaxed space-y-2">
         <h5 className="font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
           <Icons.Lock /> Vaše soukromí
         </h5>
-        <p>Všechna data jsou uložena výhradně ve vašem prohlížeči (LocalStorage). Scrollo.cz neodesílá vaše vzpomínky na žádný server.</p>
-        <p>Tip: Pokud vymažete data prohlížeče, vaše historie bude ztracena. Brzy přidáme možnost exportu dat.</p>
+        <p>Všechna data jsou uložena výhradně ve vašem prohlížeči. Scrollo.cz neodesílá vaše vzpomínky na žádný server.</p>
       </div>
     </div>
   );
