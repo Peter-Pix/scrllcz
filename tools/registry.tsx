@@ -37,10 +37,11 @@ import { MarkdownConverterTool } from './MarkdownConverter';
 import { PersonalityTestTool } from './PersonalityTest';
 import { EmbeddableCountdownTool } from './EmbeddableCountdown';
 import { TextDiffTool } from './TextDiff';
+import { UnitConverterTool } from './UnitConverter';
 
 export type ToolCategory = 'Vše' | 'Grafika' | 'Text' | 'Produktivita' | 'Hudba' | 'Finance' | 'Ostatní';
 
-export type ToolId = 'dashboard' | 'qr-code' | 'password-gen' | 'text-formatter' | 'image-resizer' | 'language-guide' | 'color-picker' | 'currency-converter' | 'ai-compass' | 'weather-forecast' | 'vocative-declensor' | 'image-cropper' | 'pizza-calculator' | 'name-day-calendar' | 'random-picker' | 'text-analyzer' | 'number-to-words' | 'stopwatch' | 'image-palette' | 'chord-generator' | 'my-history' | 'capital-cities' | 'czech-holidays' | 'debt-list' | 'shopping-list' | 'quick-notes' | 'todo-list' | 'chromatic-tuner' | 'audio-trimmer' | 'audio-converter' | 'bpm-tapper' | 'investment-calc' | 'metronome' | 'markdown-conv' | 'personality-test' | 'embed-countdown' | 'text-diff';
+export type ToolId = 'dashboard' | 'qr-code' | 'password-gen' | 'text-formatter' | 'image-resizer' | 'language-guide' | 'color-picker' | 'currency-converter' | 'ai-compass' | 'weather-forecast' | 'vocative-declensor' | 'image-cropper' | 'pizza-calculator' | 'name-day-calendar' | 'random-picker' | 'text-analyzer' | 'number-to-words' | 'stopwatch' | 'image-palette' | 'chord-generator' | 'my-history' | 'capital-cities' | 'czech-holidays' | 'debt-list' | 'shopping-list' | 'quick-notes' | 'todo-list' | 'chromatic-tuner' | 'audio-trimmer' | 'audio-converter' | 'bpm-tapper' | 'investment-calc' | 'metronome' | 'markdown-conv' | 'personality-test' | 'embed-countdown' | 'text-diff' | 'unit-converter';
 
 export interface ToolConfig {
   id: ToolId;
@@ -53,6 +54,15 @@ export interface ToolConfig {
 }
 
 export const tools: ToolConfig[] = [
+  {
+    id: 'unit-converter',
+    title: 'Převodník jednotek',
+    description: 'Chytrý převodník délky, hmotnosti, plochy, objemu a teploty s okamžitou odezvou.',
+    category: 'Produktivita',
+    icon: <Icons.Ruler />,
+    component: UnitConverterTool,
+    color: 'from-sky-600 via-indigo-600 to-blue-700'
+  },
   {
     id: 'text-diff',
     title: 'Porovnávač textů',

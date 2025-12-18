@@ -28,7 +28,6 @@ export const MyHistoryTool = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   
-  // Form State
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     title: '',
@@ -36,7 +35,6 @@ export const MyHistoryTool = () => {
     type: 'normal' as EventType
   });
 
-  // Persistence
   useEffect(() => {
     localStorage.setItem('scrollo_history_events', JSON.stringify(events));
   }, [events]);
@@ -108,7 +106,6 @@ export const MyHistoryTool = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
-      {/* Delete Confirmation Modal */}
       <Modal 
         isOpen={!!deleteConfirmId} 
         onClose={() => setDeleteConfirmId(null)} 
@@ -117,168 +114,143 @@ export const MyHistoryTool = () => {
         footer={
           <>
             <Button variant="secondary" onClick={() => setDeleteConfirmId(null)}>Zrušit</Button>
-            <Button variant="danger" onClick={confirmDelete}>Smazat záznam</Button>
+            <Button variant="danger" onClick={confirmDelete}>Smazat</Button>
           </>
         }
       >
-        Opravdu si přejete smazat tento moment z vaší časové osy? Tuto akci nelze vzít zpět.
+        Opravdu si přejete smazat tento záznam z vaší časové osy?
       </Modal>
 
-      {/* Header & Stats */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900/50 p-6 rounded-2xl border border-slate-800">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900/50 p-4 sm:p-6 rounded-2xl border border-slate-800">
         <div className="flex gap-6">
           <div className="text-center">
-            <div className="text-2xl font-bold text-white">{events.length}</div>
-            <div className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Událostí</div>
+            <div className="text-xl sm:text-2xl font-bold text-white">{events.length}</div>
+            <div className="text-[10px] text-slate-500 uppercase font-bold">Událostí</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-indigo-400">{events.filter(e => e.type === 'milestone').length}</div>
-            <div className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Milníků</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-teal-400">{events.filter(e => e.type === 'goal').length}</div>
-            <div className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Cílů</div>
+            <div className="text-xl sm:text-2xl font-bold text-indigo-400">{events.filter(e => e.type === 'milestone').length}</div>
+            <div className="text-[10px] text-slate-500 uppercase font-bold">Milníků</div>
           </div>
         </div>
-        <Button onClick={() => setIsFormOpen(true)} className="w-full sm:w-auto">
+        <Button onClick={() => setIsFormOpen(true)} className="w-full sm:w-auto py-2.5">
           <Icons.Plus /> Přidat moment
         </Button>
       </div>
 
-      {/* Editor Modal Overlay */}
       {isFormOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 w-full max-w-lg shadow-2xl relative">
             <button onClick={resetForm} className="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors">
               <Icons.Trash />
             </button>
-            <h3 className="text-2xl font-bold text-white mb-6">
-              {editingId ? 'Upravit moment' : 'Nový moment v čase'}
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-6">
+              {editingId ? 'Upravit moment' : 'Nový moment'}
             </h3>
             
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Datum</label>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">Datum</label>
                   <input 
                     type="date" 
                     value={formData.date}
                     onChange={e => setFormData(prev => ({...prev, date: e.target.value}))}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:border-indigo-500 outline-none transition-colors"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:border-indigo-500 outline-none transition-colors"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Typ (pouze pro minulost)</label>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">Typ</label>
                   <select 
                     value={formData.type}
                     onChange={e => setFormData(prev => ({...prev, type: e.target.value as EventType}))}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:border-indigo-500 outline-none transition-colors appearance-none"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:border-indigo-500 outline-none appearance-none"
                     disabled={formData.date > new Date().toISOString().split('T')[0]}
                   >
                     <option value="normal">Běžná událost</option>
-                    <option value="milestone">Zásadní milník</option>
+                    <option value="milestone">Milník</option>
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Název události</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">Název</label>
                 <input 
                   type="text" 
                   value={formData.title}
                   onChange={e => setFormData(prev => ({...prev, title: e.target.value}))}
-                  placeholder="Narození, první práce, svatba..."
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:border-indigo-500 outline-none transition-colors"
+                  placeholder="Co se stalo?"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:border-indigo-500 outline-none"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Popis (nepovinné)</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">Popis</label>
                 <textarea 
                   value={formData.description}
                   onChange={e => setFormData(prev => ({...prev, description: e.target.value}))}
-                  placeholder="Detaily, pocity, vzpomínky..."
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:border-indigo-500 outline-none transition-colors h-32 resize-none"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:border-indigo-500 outline-none h-24 resize-none"
                 />
               </div>
 
               <div className="flex gap-3 pt-4">
                 <Button variant="ghost" onClick={resetForm} className="flex-1">Zrušit</Button>
-                <Button type="submit" className="flex-1">Uložit do historie</Button>
+                <Button type="submit" className="flex-1">Uložit</Button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* Timeline View */}
       {events.length === 0 ? (
-        <div className="text-center py-20 bg-slate-900/20 border-2 border-dashed border-slate-800 rounded-3xl animate-fade-in">
-          <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-600">
+        <div className="text-center py-24 bg-slate-900/10 border-2 border-dashed border-slate-800/50 rounded-3xl animate-fade-in">
+          <div className="w-16 h-16 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-700">
             <Icons.History />
           </div>
-          <h3 className="text-xl font-bold text-white mb-2">Vaše osa je zatím prázdná</h3>
-          <p className="text-slate-500 max-w-sm mx-auto mb-8">
-            Začněte psát příběh svého života. Přidejte své narození, první úspěchy nebo budoucí sny.
+          <h3 className="text-lg font-bold text-white mb-2">Časová osa je prázdná</h3>
+          <p className="text-slate-500 max-w-xs mx-auto text-xs px-6">
+            Začněte psát příběh svého života. Přidejte své narození, první úspěchy nebo budoucí cíle.
           </p>
-          <Button onClick={() => setIsFormOpen(true)} variant="primary">
-            Vytvořit první záznam
-          </Button>
         </div>
       ) : (
-        <div className="relative animate-fade-in pl-4 sm:pl-0">
-          {/* Vertical Line */}
-          <div className="absolute left-4 sm:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-indigo-500/50 via-slate-800 to-teal-500/50 -translate-x-1/2" />
+        <div className="relative animate-fade-in pl-4 sm:pl-0 pb-10">
+          <div className="absolute left-4 sm:left-1/2 top-0 bottom-0 w-px bg-slate-800 -translate-x-1/2" />
 
-          <div className="space-y-16">
+          <div className="space-y-12">
             {(Object.entries(groupedEvents) as [string, LifeEvent[]][]).map(([year, yearEvents]) => (
               <div key={year} className="relative">
-                {/* Year Badge */}
-                <div className="sticky top-24 z-10 flex justify-center mb-10">
-                   <div className="bg-slate-950 border border-slate-800 text-slate-400 px-4 py-1 rounded-full text-sm font-black tracking-[0.2em] shadow-xl">
+                <div className="sticky top-24 z-10 flex justify-center mb-8">
+                   <div className="bg-slate-950 border border-slate-800 text-slate-500 px-3 py-0.5 rounded-full text-[10px] font-black tracking-widest shadow-xl">
                       {year}
                    </div>
                 </div>
 
-                <div className="space-y-12">
+                <div className="space-y-10">
                   {yearEvents.map((event, idx) => {
                     const isLeft = idx % 2 === 0;
                     const isMilestone = event.type === 'milestone';
-                    const isGoal = event.type === 'goal';
                     
                     return (
                       <div key={event.id} className={`flex flex-col sm:flex-row items-start sm:items-center w-full ${isLeft ? 'sm:flex-row' : 'sm:flex-row-reverse'}`}>
                         <div className="hidden sm:block w-1/2" />
-                        
-                        <div className="absolute left-4 sm:left-1/2 -translate-x-1/2 w-4 h-4 rounded-full border-4 border-slate-950 z-20 flex items-center justify-center">
-                           <div className={`w-full h-full rounded-full ${isMilestone ? 'bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.6)]' : isGoal ? 'bg-teal-500 shadow-[0_0_15px_rgba(20,184,166,0.6)]' : 'bg-slate-700'}`} />
+                        <div className="absolute left-4 sm:left-1/2 -translate-x-1/2 w-3 h-3 rounded-full border-2 border-slate-950 z-20 flex items-center justify-center">
+                           <div className={`w-full h-full rounded-full ${isMilestone ? 'bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-slate-700'}`} />
                         </div>
 
-                        <div className={`w-full sm:w-1/2 pl-10 sm:pl-0 ${isLeft ? 'sm:pr-12' : 'sm:pl-12'} animate-fade-in-up`}>
-                          <div className={`group bg-slate-900 border ${isMilestone ? 'border-indigo-500/30 bg-indigo-500/5 shadow-indigo-500/5' : isGoal ? 'border-teal-500/30 border-dashed bg-teal-500/5' : 'border-slate-800'} p-5 rounded-2xl transition-all hover:-translate-y-1 hover:shadow-xl`}>
-                            <div className="flex justify-between items-start mb-2">
-                              <span className={`text-[10px] font-bold uppercase tracking-widest ${isMilestone ? 'text-indigo-400' : isGoal ? 'text-teal-400' : 'text-slate-500'}`}>
+                        <div className={`w-full sm:w-1/2 pl-10 sm:pl-0 ${isLeft ? 'sm:pr-10' : 'sm:pl-10'}`}>
+                          <div className={`group bg-slate-900 border ${isMilestone ? 'border-indigo-500/30 ring-1 ring-indigo-500/10' : 'border-slate-800'} p-4 rounded-xl transition-all hover:border-slate-600`}>
+                            <div className="flex justify-between items-start mb-1">
+                              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
                                 {new Date(event.date).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'long' })}
-                                {isGoal && ' • CÍL'}
-                                {isMilestone && ' • MILNÍK'}
                               </span>
                               <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onClick={() => handleEdit(event)} className="p-1 text-slate-500 hover:text-indigo-400 transition-colors">
-                                  <Icons.Pencil />
-                                </button>
-                                <button onClick={() => setDeleteConfirmId(event.id)} className="p-1 text-slate-500 hover:text-red-400 transition-colors">
-                                  <Icons.Trash />
-                                </button>
+                                <button onClick={() => handleEdit(event)} className="p-1 text-slate-600 hover:text-indigo-400 transition-colors"><Icons.Pencil /></button>
+                                <button onClick={() => setDeleteConfirmId(event.id)} className="p-1 text-slate-600 hover:text-rose-400 transition-colors"><Icons.Trash /></button>
                               </div>
                             </div>
-                            <h4 className="text-xl font-bold text-white mb-2 leading-tight">{event.title}</h4>
-                            {event.description && (
-                              <p className="text-slate-400 text-sm leading-relaxed line-clamp-3 group-hover:line-clamp-none transition-all">
-                                {event.description}
-                              </p>
-                            )}
+                            <h4 className="text-base font-bold text-white mb-1 leading-tight">{event.title}</h4>
+                            {event.description && <p className="text-slate-400 text-xs leading-relaxed">{event.description}</p>}
                           </div>
                         </div>
                       </div>
@@ -290,13 +262,6 @@ export const MyHistoryTool = () => {
           </div>
         </div>
       )}
-
-      <div className="bg-slate-900/30 border border-slate-800 p-6 rounded-2xl text-slate-500 text-xs leading-relaxed space-y-2">
-        <h5 className="font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-          <Icons.Lock /> Vaše soukromí
-        </h5>
-        <p>Všechna data jsou uložena výhradně ve vašem prohlížeči. Scrollo.cz neodesílá vaše vzpomínky na žádný server.</p>
-      </div>
     </div>
   );
 };

@@ -1,9 +1,9 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Icons } from './components/Icons';
 import { Button, Card } from './components/Shared';
-import { tools, ToolId, ToolCategory } from './tools/registry';
+import { tools, ToolId, ToolCategory, ToolConfig } from './tools/registry';
 
 const CATEGORIES: { label: ToolCategory; color: string; bg: string }[] = [
   { label: 'Vše', color: 'bg-slate-500', bg: 'bg-slate-500/10' },
@@ -16,9 +16,19 @@ const CATEGORIES: { label: ToolCategory; color: string; bg: string }[] = [
 ];
 
 const App = () => {
+  // --- STATE & PERSISTENCE ---
   const [favorites, setFavorites] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem('scrollo_favorites');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [pinnedOrder, setPinnedOrder] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('scrollo_pinned_order');
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -36,9 +46,12 @@ const App = () => {
 
   const [activeCategory, setActiveCategory] = useState<ToolCategory>('Vše');
   const [isSyncing, setIsSyncing] = useState(false);
+  const dragItem = useRef<number | null>(null);
+  const dragOverItem = useRef<number | null>(null);
 
   const activeTool = tools.find(t => t.id === currentToolId);
 
+  // --- EFFECTS ---
   useEffect(() => {
     if (currentToolId) {
       localStorage.setItem('scrollo_last_tool', currentToolId);
@@ -49,8 +62,19 @@ const App = () => {
 
   useEffect(() => {
     localStorage.setItem('scrollo_favorites', JSON.stringify(favorites));
+    // Sync pinned order with favorites (add new ones to the end)
+    setPinnedOrder(prev => {
+      const newPinned = favorites.filter(f => !prev.includes(f));
+      const filteredPrev = prev.filter(p => favorites.includes(p));
+      return [...filteredPrev, ...newPinned];
+    });
   }, [favorites]);
 
+  useEffect(() => {
+    localStorage.setItem('scrollo_pinned_order', JSON.stringify(pinnedOrder));
+  }, [pinnedOrder]);
+
+  // --- HANDLERS ---
   const toggleFavorite = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     setFavorites(prev => 
@@ -61,11 +85,20 @@ const App = () => {
   const handleCategoryChange = (cat: ToolCategory) => {
     if (cat === activeCategory) return;
     setIsSyncing(true);
-    // Delší čas na plynulý odchod (nádech hladiny)
     setTimeout(() => {
       setActiveCategory(cat);
       setIsSyncing(false);
     }, 250);
+  };
+
+  const handleSortPinned = () => {
+    if (dragItem.current === null || dragOverItem.current === null) return;
+    const _order = [...pinnedOrder];
+    const draggedItemContent = _order.splice(dragItem.current, 1)[0];
+    _order.splice(dragOverItem.current, 0, draggedItemContent);
+    dragItem.current = null;
+    dragOverItem.current = null;
+    setPinnedOrder(_order);
   };
 
   const sortedTools = useMemo(() => {
@@ -80,8 +113,14 @@ const App = () => {
       });
   }, [activeCategory, favorites]);
 
+  const pinnedTools = useMemo(() => {
+    return pinnedOrder
+      .map(id => tools.find(t => t.id === id))
+      .filter((t): t is ToolConfig => !!t);
+  }, [pinnedOrder]);
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 font-sans selection:bg-indigo-500/30">
+    <div className="min-h-screen bg-slate-950 text-slate-200 font-sans selection:bg-indigo-500/30 pb-20">
       <header className="fixed top-0 w-full bg-slate-950/80 backdrop-blur-md border-b border-white/5 z-50">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div 
@@ -94,15 +133,56 @@ const App = () => {
             <span className="font-bold text-xl tracking-tight text-white group-hover:text-indigo-200 transition-colors">Scrollo.cz</span>
           </div>
           
-          {currentToolId && (
-             <Button variant="ghost" onClick={() => setCurrentToolId(null)} className="px-2 sm:px-4">
-               <Icons.Home /> <span className="hidden sm:inline">Zpět</span>
-             </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {currentToolId && (
+               <Button variant="ghost" onClick={() => setCurrentToolId(null)} className="px-2 sm:px-4 h-10">
+                 <Icons.Home /> <span className="hidden sm:inline">Zpět</span>
+               </Button>
+            )}
+          </div>
         </div>
       </header>
 
-      <main className="pt-20 sm:pt-24 pb-12 px-2 sm:px-4 max-w-6xl mx-auto min-h-[calc(100vh-64px)]">
+      {/* QUICK ACCESS DRAGGABLE TOOLBAR */}
+      {favorites.length > 0 && (
+        <div className="fixed top-16 left-0 w-full z-40 bg-slate-950/40 backdrop-blur-sm border-b border-white/5 animate-fade-in">
+          <div className="max-w-6xl mx-auto px-4 py-2 overflow-x-auto no-scrollbar">
+            <div className="flex items-center gap-2 min-w-max">
+              <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest mr-2 flex items-center gap-1">
+                 <Icons.Star />
+              </div>
+              {pinnedTools.map((tool, index) => (
+                <div
+                  key={tool.id}
+                  draggable
+                  onDragStart={() => (dragItem.current = index)}
+                  onDragEnter={() => (dragOverItem.current = index)}
+                  onDragEnd={handleSortPinned}
+                  onDragOver={(e) => e.preventDefault()}
+                  onClick={() => setCurrentToolId(tool.id)}
+                  className={`
+                    group relative flex items-center justify-center w-10 h-10 rounded-xl cursor-pointer transition-all duration-300
+                    ${currentToolId === tool.id ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-white border border-white/5'}
+                    ${dragItem.current === index ? 'opacity-20 scale-90' : 'opacity-100'}
+                  `}
+                  title={tool.title}
+                >
+                  <div className="scale-75">{tool.icon}</div>
+                  {/* Tooltip on hover */}
+                  <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 text-[10px] text-white rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
+                    {tool.title}
+                  </div>
+                </div>
+              ))}
+              <div className="text-[9px] font-black text-slate-700 ml-4 uppercase tracking-[0.2em] hidden sm:block">
+                 Chytni a srovnej
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <main className={`${favorites.length > 0 ? 'pt-28 sm:pt-32' : 'pt-20 sm:pt-24'} pb-12 px-2 sm:px-4 max-w-6xl mx-auto min-h-[calc(100vh-64px)]`}>
         
         {!currentToolId && (
           <div className="animate-fade-in-up">
@@ -110,13 +190,13 @@ const App = () => {
               <h1 className="text-3xl sm:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400">
                 Sada užitečných nástrojů
               </h1>
-              <p className="text-slate-400 text-base sm:text-lg max-w-2xl mx-auto px-4">
+              <p className="text-slate-400 text-sm sm:text-lg max-w-2xl mx-auto px-4">
                 Vše co potřebujete pro produktivní práci na jednom místě.
               </p>
             </div>
 
             {/* Liquid Pill Filter System */}
-            <div className="flex flex-wrap justify-center items-center gap-4 mb-14 sm:mb-24 px-4 min-h-[48px]">
+            <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 mb-14 sm:mb-24 px-4 min-h-[40px] sm:min-h-[48px]">
                {CATEGORIES.map((cat) => {
                  const isActive = activeCategory === cat.label;
                  return (
@@ -126,21 +206,18 @@ const App = () => {
                      className={`
                        group relative flex items-center justify-center transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] overflow-hidden
                        ${isActive 
-                         ? `w-auto px-8 h-11 sm:h-12 rounded-full ${cat.color} text-white shadow-2xl ring-4 ring-white/10 scale-105` 
-                         : 'w-5 h-5 rounded-full bg-slate-900 hover:bg-slate-800 hover:scale-125'
+                         ? `w-auto px-5 sm:px-8 h-9 sm:h-12 rounded-full ${cat.color} text-white shadow-2xl ring-2 sm:ring-4 ring-white/10 sm:scale-105` 
+                         : 'w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-900 hover:bg-slate-800 hover:scale-125'
                        }
                      `}
                      title={cat.label}
                    >
-                     {/* Label fade animation */}
                      <span className={`
-                        whitespace-nowrap text-xs sm:text-sm font-black uppercase tracking-[0.15em] transition-all duration-500
+                        whitespace-nowrap text-[10px] sm:text-sm font-black uppercase tracking-[0.1em] sm:tracking-[0.15em] transition-all duration-500
                         ${isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-50 pointer-events-none w-0 overflow-hidden'}
                      `}>
                         {cat.label}
                      </span>
-                     
-                     {/* Hidden color dot for expansion effect */}
                      {!isActive && (
                         <div className={`absolute inset-0 rounded-full ${cat.color} opacity-20 blur-[1px] group-hover:opacity-60 transition-opacity`} />
                      )}
@@ -149,7 +226,7 @@ const App = () => {
                })}
             </div>
 
-            {/* Grid with stable plane transition - Enhanced Smoothness */}
+            {/* Grid with stable plane transition */}
             <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] ${isSyncing ? 'opacity-0 blur-lg scale-[0.97] -translate-y-2' : 'opacity-100 blur-0 scale-100 translate-y-0'}`}>
               {sortedTools.map((tool, index) => {
                 const isFav = favorites.includes(tool.id);
@@ -240,7 +317,9 @@ const App = () => {
         .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
         .animate-staggered-fade { animation: staggeredFade 0.75s cubic-bezier(0.19, 1, 0.22, 1) both; }
         
-        /* Zjemnění scrollování a interakcí */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
         html { scroll-behavior: smooth; }
         body { -webkit-font-smoothing: antialiased; }
       `}</style>
