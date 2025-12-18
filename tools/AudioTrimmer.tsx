@@ -17,6 +17,8 @@ export const AudioTrimmerTool = () => {
   // Effects
   const [fadeIn, setFadeIn] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
+  const [fadeInDuration, setFadeInDuration] = useState(1.0);
+  const [fadeOutDuration, setFadeOutDuration] = useState(1.0);
   
   const audioContextRef = useRef<AudioContext | null>(null);
   const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
@@ -179,16 +181,16 @@ export const AudioTrimmerTool = () => {
     
     const gainNode = offlineCtx.createGain();
     
-    // Apply Fades with correct ramping
+    // Apply Fades with user defined durations
     if (fadeIn) {
-      const fadeDuration = Math.min(2, duration / 3);
+      const actualFadeIn = Math.min(fadeInDuration, duration / 2);
       gainNode.gain.setValueAtTime(0, 0);
-      gainNode.gain.linearRampToValueAtTime(1, fadeDuration);
+      gainNode.gain.linearRampToValueAtTime(1, actualFadeIn);
     }
     
     if (fadeOut) {
-      const fadeDuration = Math.min(2, duration / 3);
-      gainNode.gain.setValueAtTime(1, Math.max(0, duration - fadeDuration));
+      const actualFadeOut = Math.min(fadeOutDuration, duration / 2);
+      gainNode.gain.setValueAtTime(1, Math.max(0, duration - actualFadeOut));
       gainNode.gain.linearRampToValueAtTime(0, duration);
     }
     
@@ -391,25 +393,60 @@ export const AudioTrimmerTool = () => {
                </div>
             </div>
 
-            <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-6 border-t border-slate-800">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pt-6 border-t border-slate-800">
                {/* Effects Settings */}
-               <div className="flex bg-slate-950 p-1 rounded-2xl border border-slate-800">
-                  <button 
-                    onClick={() => setFadeIn(!fadeIn)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${fadeIn ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
-                  >
-                    Fade In
-                  </button>
-                  <button 
-                    onClick={() => setFadeOut(!fadeOut)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${fadeOut ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
-                  >
-                    Fade Out
-                  </button>
+               <div className="space-y-4 w-full md:w-auto">
+                 <div className="flex bg-slate-950 p-1 rounded-2xl border border-slate-800 w-full sm:w-fit">
+                    <button 
+                      onClick={() => setFadeIn(!fadeIn)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${fadeIn ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                    >
+                      Fade In
+                    </button>
+                    <button 
+                      onClick={() => setFadeOut(!fadeOut)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${fadeOut ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                    >
+                      Fade Out
+                    </button>
+                 </div>
+                 
+                 {(fadeIn || fadeOut) && (
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fade-in">
+                     {fadeIn && (
+                       <div className="bg-slate-950/50 p-3 rounded-xl border border-slate-800">
+                         <div className="flex justify-between text-[9px] font-black uppercase text-slate-500 mb-1">
+                           <span>Délka Fade In</span>
+                           <span>{fadeInDuration}s</span>
+                         </div>
+                         <input 
+                           type="range" min="0.1" max="5.0" step="0.1" 
+                           value={fadeInDuration} 
+                           onChange={e => setFadeInDuration(parseFloat(e.target.value))}
+                           className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                         />
+                       </div>
+                     )}
+                     {fadeOut && (
+                       <div className="bg-slate-950/50 p-3 rounded-xl border border-slate-800">
+                         <div className="flex justify-between text-[9px] font-black uppercase text-slate-500 mb-1">
+                           <span>Délka Fade Out</span>
+                           <span>{fadeOutDuration}s</span>
+                         </div>
+                         <input 
+                           type="range" min="0.1" max="5.0" step="0.1" 
+                           value={fadeOutDuration} 
+                           onChange={e => setFadeOutDuration(parseFloat(e.target.value))}
+                           className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                         />
+                       </div>
+                     )}
+                   </div>
+                 )}
                </div>
 
                {/* Central Play/Reset */}
-               <div className="flex items-center gap-4">
+               <div className="flex items-center gap-4 w-full md:w-auto justify-center">
                   <button 
                     onClick={() => { stopPlayback(); setCurrentTime(startTime); }}
                     className="p-3 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-full transition-all hover:rotate-[-90deg]"

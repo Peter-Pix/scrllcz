@@ -6,9 +6,19 @@ export interface ButtonProps {
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
   className?: string;
   disabled?: boolean;
+  // Added type prop to support HTML button types (button, submit, reset)
+  type?: 'button' | 'submit' | 'reset';
 }
 
-export const Button: React.FC<ButtonProps> = ({ onClick, children, variant = 'primary', className = '', disabled = false }) => {
+// Destructured type prop with a default value of 'button'
+export const Button: React.FC<ButtonProps> = ({ 
+  onClick, 
+  children, 
+  variant = 'primary', 
+  className = '', 
+  disabled = false,
+  type = 'button' 
+}) => {
   const baseStyle = "px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed";
   const variants = {
     primary: "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-900/50",
@@ -17,7 +27,13 @@ export const Button: React.FC<ButtonProps> = ({ onClick, children, variant = 'pr
     danger: "text-red-400 hover:text-red-100 hover:bg-red-900/30",
   };
   return (
-    <button onClick={onClick} disabled={disabled} className={`${baseStyle} ${variants[variant]} ${className}`}>
+    <button 
+      // Applied the type prop to the underlying HTML button element
+      type={type}
+      onClick={onClick} 
+      disabled={disabled} 
+      className={`${baseStyle} ${variants[variant]} ${className}`}
+    >
       {children}
     </button>
   );

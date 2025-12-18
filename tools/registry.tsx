@@ -31,8 +31,11 @@ import { ChromaticTunerTool } from './ChromaticTuner';
 import { AudioTrimmerTool } from './AudioTrimmer';
 import { AudioConverterTool } from './AudioConverter';
 import { BPMTapperTool } from './BPMTapper';
+import { InvestmentCalculatorTool } from './InvestmentCalculator';
+import { MetronomeTool } from './Metronome';
+import { MarkdownConverterTool } from './MarkdownConverter';
 
-export type ToolId = 'dashboard' | 'qr-code' | 'password-gen' | 'text-formatter' | 'image-resizer' | 'language-guide' | 'color-picker' | 'currency-converter' | 'ai-compass' | 'weather-forecast' | 'vocative-declensor' | 'image-cropper' | 'pizza-calculator' | 'name-day-calendar' | 'random-picker' | 'text-analyzer' | 'number-to-words' | 'stopwatch' | 'image-palette' | 'chord-generator' | 'my-history' | 'capital-cities' | 'czech-holidays' | 'debt-list' | 'shopping-list' | 'quick-notes' | 'todo-list' | 'chromatic-tuner' | 'audio-trimmer' | 'audio-converter' | 'bpm-tapper';
+export type ToolId = 'dashboard' | 'qr-code' | 'password-gen' | 'text-formatter' | 'image-resizer' | 'language-guide' | 'color-picker' | 'currency-converter' | 'ai-compass' | 'weather-forecast' | 'vocative-declensor' | 'image-cropper' | 'pizza-calculator' | 'name-day-calendar' | 'random-picker' | 'text-analyzer' | 'number-to-words' | 'stopwatch' | 'image-palette' | 'chord-generator' | 'my-history' | 'capital-cities' | 'czech-holidays' | 'debt-list' | 'shopping-list' | 'quick-notes' | 'todo-list' | 'chromatic-tuner' | 'audio-trimmer' | 'audio-converter' | 'bpm-tapper' | 'investment-calc' | 'metronome' | 'markdown-conv';
 
 export interface ToolConfig {
   id: ToolId;
@@ -44,6 +47,30 @@ export interface ToolConfig {
 }
 
 export const tools: ToolConfig[] = [
+  {
+    id: 'markdown-conv',
+    title: 'Markdown & HTML',
+    description: 'Převodník mezi formáty Markdown, HTML a čistým textem v reálném čase.',
+    icon: <Icons.Code />,
+    component: MarkdownConverterTool,
+    color: 'from-blue-500 via-indigo-600 to-violet-700'
+  },
+  {
+    id: 'metronome',
+    title: 'Metronom',
+    description: 'Přesný hudební metronom s nastavitelným taktem a vizuální odezvou pro hudebníky.',
+    icon: <Icons.Music />,
+    component: MetronomeTool,
+    color: 'from-rose-600 via-pink-600 to-orange-600'
+  },
+  {
+    id: 'investment-calc',
+    title: 'Investiční kalkulačka',
+    description: 'Vizuální motivace k šetření. Podívejte se, kolik vyděláte, když omezíte zlozvyky.',
+    icon: <Icons.TrendingUp />,
+    component: InvestmentCalculatorTool,
+    color: 'from-emerald-500 via-teal-600 to-sky-600'
+  },
   {
     id: 'bpm-tapper',
     title: 'BPM Tapper',

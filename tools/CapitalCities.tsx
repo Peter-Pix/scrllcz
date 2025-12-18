@@ -126,15 +126,17 @@ export const CapitalCitiesTool = () => {
     options: string[];
     score: number;
     total: number;
+    streak: number;
     lastAnswer: { correct: boolean; capital: string } | null;
-    highScore: number;
+    topScores: (number | null)[];
   }>({
     currentQuestion: null,
     options: [],
     score: 0,
     total: 0,
+    streak: 0,
     lastAnswer: null,
-    highScore: parseInt(localStorage.getItem('scrollo_capitals_highscore') || '0'),
+    topScores: JSON.parse(localStorage.getItem('scrollo_capitals_top_scores') || '[null, null, null]'),
   });
 
   const continents = ['Vše', 'Evropa', 'Amerika', 'Asie', 'Afrika', 'Oceánie'];
@@ -171,27 +173,50 @@ export const CapitalCitiesTool = () => {
     }
   }, [activeTab]);
 
+  // Finální zápis do žebříčku - volá se jen při konci série (chyba nebo reset)
+  const recordFinalStreak = (finalStreak: number) => {
+    if (finalStreak <= 0) return;
+
+    setQuizState(prev => {
+      const currentScores = prev.topScores.filter((s): s is number => s !== null);
+      
+      // Přidáme výsledek z PRÁVĚ UKONČENÉHO běhu
+      const newScores = [...currentScores, finalStreak].sort((a, b) => b - a).slice(0, 3);
+      
+      // Doplnění prázdných slotů
+      const paddedScores = [...newScores];
+      while (paddedScores.length < 3) paddedScores.push(null);
+      
+      localStorage.setItem('scrollo_capitals_top_scores', JSON.stringify(paddedScores));
+      return { ...prev, topScores: paddedScores };
+    });
+  };
+
   const handleAnswer = (selectedCapital: string) => {
     if (!quizState.currentQuestion) return;
     
     const isCorrect = selectedCapital === quizState.currentQuestion.capital;
-    const newScore = isCorrect ? quizState.score + 1 : 0; // Reset on wrong answer for a "streak" feel, or just keep going
-    // Let's go with simple score for this session
     
-    const nextTotal = quizState.total + 1;
-    const nextScore = isCorrect ? quizState.score + 1 : quizState.score;
-    
-    if (nextScore > quizState.highScore) {
-      localStorage.setItem('scrollo_capitals_highscore', nextScore.toString());
+    if (isCorrect) {
+      // Pokračujeme v sérii
+      setQuizState(prev => ({
+        ...prev,
+        score: prev.score + 1,
+        total: prev.total + 1,
+        streak: prev.streak + 1,
+        lastAnswer: { correct: true, capital: prev.currentQuestion!.capital }
+      }));
+    } else {
+      // CHYBA - Konec závodu. Zapíšeme dosažený streak do žebříčku.
+      recordFinalStreak(quizState.streak);
+      
+      setQuizState(prev => ({
+        ...prev,
+        total: prev.total + 1,
+        streak: 0, // Reset streaku po chybě
+        lastAnswer: { correct: false, capital: prev.currentQuestion!.capital }
+      }));
     }
-
-    setQuizState(prev => ({
-      ...prev,
-      score: nextScore,
-      total: nextTotal,
-      highScore: Math.max(nextScore, prev.highScore),
-      lastAnswer: { correct: isCorrect, capital: quizState.currentQuestion!.capital }
-    }));
 
     setTimeout(() => {
       setQuizState(prev => ({ ...prev, lastAnswer: null }));
@@ -200,10 +225,14 @@ export const CapitalCitiesTool = () => {
   };
 
   const resetQuiz = () => {
+    // Při ručním resetu také zapíšeme aktuální streak, pokud nějaký je
+    recordFinalStreak(quizState.streak);
+    
     setQuizState(prev => ({
       ...prev,
       score: 0,
       total: 0,
+      streak: 0,
       lastAnswer: null,
     }));
     generateQuestion();
@@ -253,19 +282,19 @@ export const CapitalCitiesTool = () => {
                <table className="w-full text-left">
                  <thead>
                    <tr className="bg-slate-950/50 text-slate-500 text-[10px] uppercase font-bold tracking-widest border-b border-slate-800">
-                     <th className="px-6 py-4">Vlajka</th>
-                     <th className="px-6 py-4">Stát</th>
-                     <th className="px-6 py-4">Hlavní město</th>
-                     <th className="px-6 py-4">Kontinent</th>
+                     <th className="px-2 sm:px-6 py-4">Vlajka</th>
+                     <th className="px-2 sm:px-6 py-4">Stát</th>
+                     <th className="px-2 sm:px-6 py-4">Hlavní město</th>
+                     <th className="px-2 sm:px-6 py-4 hidden sm:table-cell">Kontinent</th>
                    </tr>
                  </thead>
                  <tbody className="divide-y divide-slate-800">
                    {filteredCountries.map((c, i) => (
                      <tr key={i} className="hover:bg-slate-800/30 transition-colors group">
-                       <td className="px-6 py-4 text-2xl">{c.flag}</td>
-                       <td className="px-6 py-4 font-bold text-white group-hover:text-indigo-400">{c.name}</td>
-                       <td className="px-6 py-4 text-slate-300">{c.capital}</td>
-                       <td className="px-6 py-4">
+                       <td className="px-2 sm:px-6 py-3 sm:py-4 text-xl sm:text-2xl">{c.flag}</td>
+                       <td className="px-2 sm:px-6 py-3 sm:py-4 font-bold text-white group-hover:text-indigo-400 text-[11px] sm:text-sm">{c.name}</td>
+                       <td className="px-2 sm:px-6 py-3 sm:py-4 text-slate-300 text-[11px] sm:text-sm">{c.capital}</td>
+                       <td className="px-2 sm:px-6 py-3 sm:py-4 hidden sm:table-cell">
                          <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full ${
                            c.continent === 'Evropa' ? 'bg-blue-900/30 text-blue-400' :
                            c.continent === 'Asie' ? 'bg-yellow-900/30 text-yellow-400' :
@@ -292,15 +321,44 @@ export const CapitalCitiesTool = () => {
 
       {activeTab === 'quiz' && quizState.currentQuestion && (
         <div className="animate-fade-in max-w-2xl mx-auto space-y-8">
-           {/* Stats Header */}
-           <div className="flex justify-between items-center bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-              <div>
-                <div className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Aktuální skóre</div>
-                <div className="text-2xl font-black text-indigo-400">{quizState.score} / {quizState.total}</div>
+           
+           {/* Records and Stats Grid */}
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Actual Score & Streak */}
+              <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex items-center justify-between">
+                <div>
+                  <div className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Celkem správně</div>
+                  <div className="text-2xl font-black text-white">{quizState.score} <span className="text-xs text-slate-600 font-normal">z {quizState.total}</span></div>
+                </div>
+                <div className="flex flex-col items-end">
+                  <div className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Aktuální série</div>
+                  <div className="flex items-center gap-1">
+                    <span className={`text-2xl font-black transition-colors ${quizState.streak > 0 ? 'text-orange-500' : 'text-slate-800'}`}>{quizState.streak}</span>
+                    <span className={quizState.streak > 0 ? 'text-orange-500 animate-pulse' : 'text-slate-800'}>🔥</span>
+                  </div>
+                </div>
               </div>
-              <div className="text-right">
-                <div className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Nejlepší výsledek</div>
-                <div className="text-2xl font-black text-white">{quizState.highScore}</div>
+
+              {/* Personal Leaderboard */}
+              <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                 <div className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-2 flex items-center gap-2">
+                    <Icons.Star /> Tvoje rekordy (nej delší série)
+                 </div>
+                 <div className="flex gap-2">
+                    {quizState.topScores.map((s, i) => (
+                      <div key={i} className={`flex-1 text-center py-1.5 rounded-lg border flex flex-col items-center justify-center transition-all ${
+                        s === null ? 'bg-slate-950/20 border-slate-900 text-slate-800' :
+                        i === 0 ? 'bg-indigo-600/10 border-indigo-500 text-indigo-400 ring-1 ring-indigo-500/20' : 
+                        i === 1 ? 'bg-slate-800/50 border-slate-700 text-slate-300' : 
+                        'bg-slate-900 border-slate-800 text-slate-500'
+                      }`}>
+                        <span className="text-[7px] font-black opacity-50">{i + 1}. MÍSTO</span>
+                        <span className={`text-sm font-black ${i === 0 && s !== null ? 'scale-110' : ''}`}>
+                          {s !== null ? s : '---'}
+                        </span>
+                      </div>
+                    ))}
+                 </div>
               </div>
            </div>
 
@@ -314,7 +372,7 @@ export const CapitalCitiesTool = () => {
                  </div>
                  <div>
                     <h3 className="text-slate-500 text-sm font-bold uppercase tracking-[0.2em] mb-2">Jaké je hlavní město státu</h3>
-                    <div className="text-3xl sm:text-5xl font-black text-white">{quizState.currentQuestion.name}?</div>
+                    <div className="text-2xl sm:text-5xl font-black text-white px-2 leading-tight">{quizState.currentQuestion.name}?</div>
                  </div>
               </div>
            </div>
@@ -330,7 +388,7 @@ export const CapitalCitiesTool = () => {
                     key={i}
                     disabled={showFeedback}
                     onClick={() => handleAnswer(option)}
-                    className={`p-5 rounded-2xl border-2 font-bold text-lg transition-all duration-200 transform hover:-translate-y-1 ${
+                    className={`p-4 sm:p-5 rounded-2xl border-2 font-bold text-base sm:text-lg transition-all duration-200 transform hover:-translate-y-1 ${
                       !showFeedback 
                         ? 'bg-slate-900 border-slate-800 text-slate-300 hover:border-indigo-500 hover:text-white hover:shadow-lg hover:shadow-indigo-500/20' 
                         : isCorrectAnswer 
@@ -347,15 +405,15 @@ export const CapitalCitiesTool = () => {
            </div>
 
            <div className="flex justify-center pt-4">
-              <Button onClick={resetQuiz} variant="ghost" className="text-slate-500 hover:text-red-400">
-                <Icons.RotateCcw /> Resetovat kvíz
+              <Button onClick={resetQuiz} variant="ghost" className="text-slate-500 hover:text-red-400 text-xs sm:text-sm">
+                <Icons.RotateCcw /> Resetovat session
               </Button>
            </div>
         </div>
       )}
 
-      <div className="bg-slate-900/30 border border-slate-800 p-6 rounded-2xl text-slate-500 text-sm leading-relaxed text-center">
-         💡 Tip: Procvičování hlavních měst rozvíjí vaši geografickou gramotnost a přehled o světě.
+      <div className="bg-slate-900/30 border border-slate-800 p-4 sm:p-6 rounded-2xl text-slate-500 text-[11px] sm:text-sm leading-relaxed text-center">
+         💡 Tip: Tvůj výsledek se do žebříčku zapíše až v momentě, kdy uděláš chybu. Snaž se udržet oheň co nejdéle!
       </div>
     </div>
   );
