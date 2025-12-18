@@ -163,7 +163,7 @@ const App = () => {
 
       {/* Footer */}
       <footer className="border-t border-white/5 py-8 text-center text-slate-600 text-sm">
-        <p>&copy; {new Date().getFullYear()} Scrollo.cz &bull; Vytvořeno s Gemini API</p>
+        <p>&copy; {new Date().getFullYear()} Scrollo.cz &bull; Vytvořil Petr Piskáček</p>
       </footer>
 
       <style>{`
