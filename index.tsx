@@ -35,6 +35,14 @@ const App = () => {
     }
   });
 
+  const [isPinnedVisible, setIsPinnedVisible] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('scrollo_show_pinned') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
   const [currentToolId, setCurrentToolId] = useState<ToolId | null>(() => {
     try {
       const last = localStorage.getItem('scrollo_last_tool');
@@ -73,6 +81,10 @@ const App = () => {
   useEffect(() => {
     localStorage.setItem('scrollo_pinned_order', JSON.stringify(pinnedOrder));
   }, [pinnedOrder]);
+
+  useEffect(() => {
+    localStorage.setItem('scrollo_show_pinned', String(isPinnedVisible));
+  }, [isPinnedVisible]);
 
   // --- HANDLERS ---
   const toggleFavorite = (e: React.MouseEvent, id: string) => {
@@ -134,23 +146,31 @@ const App = () => {
           </div>
           
           <div className="flex items-center gap-2">
+            {/* Toggle Favorites Button */}
+            {favorites.length > 0 && (
+              <button 
+                onClick={() => setIsPinnedVisible(!isPinnedVisible)}
+                className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300 ${isPinnedVisible ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/40' : 'bg-slate-800 text-slate-400 hover:text-white border border-slate-700'}`}
+                title={isPinnedVisible ? "Skrýt oblíbené" : "Zobrazit oblíbené"}
+              >
+                <Icons.Star />
+              </button>
+            )}
+
             {currentToolId && (
-               <Button variant="ghost" onClick={() => setCurrentToolId(null)} className="px-2 sm:px-4 h-10">
-                 <Icons.Home /> <span className="hidden sm:inline">Zpět</span>
+               <Button variant="secondary" onClick={() => setCurrentToolId(null)} className="h-10 px-3 sm:px-4">
+                 <Icons.Home /> <span className="hidden sm:inline">Domů</span>
                </Button>
             )}
           </div>
         </div>
       </header>
 
-      {/* QUICK ACCESS DRAGGABLE TOOLBAR */}
-      {favorites.length > 0 && (
-        <div className="fixed top-16 left-0 w-full z-40 bg-slate-950/40 backdrop-blur-sm border-b border-white/5 animate-fade-in">
-          <div className="max-w-6xl mx-auto px-4 py-2 overflow-x-auto no-scrollbar">
-            <div className="flex items-center gap-2 min-w-max">
-              <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest mr-2 flex items-center gap-1">
-                 <Icons.Star />
-              </div>
+      {/* QUICK ACCESS DRAGGABLE TOOLBAR - Toggled by Star in header */}
+      {isPinnedVisible && favorites.length > 0 && (
+        <div className="fixed top-16 left-0 w-full z-40 bg-slate-900/60 backdrop-blur-md border-b border-white/5 animate-slide-down">
+          <div className="max-w-6xl mx-auto px-4 py-3 overflow-x-auto no-scrollbar">
+            <div className="flex items-center gap-3 min-w-max">
               {pinnedTools.map((tool, index) => (
                 <div
                   key={tool.id}
@@ -161,28 +181,27 @@ const App = () => {
                   onDragOver={(e) => e.preventDefault()}
                   onClick={() => setCurrentToolId(tool.id)}
                   className={`
-                    group relative flex items-center justify-center w-10 h-10 rounded-xl cursor-pointer transition-all duration-300
-                    ${currentToolId === tool.id ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-white border border-white/5'}
+                    group relative flex items-center justify-center w-11 h-11 rounded-2xl cursor-pointer transition-all duration-300
+                    ${currentToolId === tool.id ? 'bg-indigo-600 text-white shadow-lg ring-2 ring-white/10' : 'bg-slate-950/50 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-800'}
                     ${dragItem.current === index ? 'opacity-20 scale-90' : 'opacity-100'}
                   `}
                   title={tool.title}
                 >
                   <div className="scale-75">{tool.icon}</div>
-                  {/* Tooltip on hover */}
-                  <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 text-[10px] text-white rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
+                  <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 text-[10px] text-white rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-xl border border-white/5">
                     {tool.title}
                   </div>
                 </div>
               ))}
-              <div className="text-[9px] font-black text-slate-700 ml-4 uppercase tracking-[0.2em] hidden sm:block">
-                 Chytni a srovnej
+              <div className="text-[8px] font-black text-slate-600 ml-4 uppercase tracking-[0.3em] hidden sm:block">
+                 Vaše zkratky
               </div>
             </div>
           </div>
         </div>
       )}
 
-      <main className={`${favorites.length > 0 ? 'pt-28 sm:pt-32' : 'pt-20 sm:pt-24'} pb-12 px-2 sm:px-4 max-w-6xl mx-auto min-h-[calc(100vh-64px)]`}>
+      <main className={`${(isPinnedVisible && favorites.length > 0) ? 'pt-32 sm:pt-36' : 'pt-20 sm:pt-24'} pb-12 px-2 sm:px-4 max-w-6xl mx-auto min-h-[calc(100vh-64px)] transition-all duration-500`}>
         
         {!currentToolId && (
           <div className="animate-fade-in-up">
@@ -313,9 +332,14 @@ const App = () => {
           from { opacity: 0; transform: scale(0.9) translateY(40px) rotateX(10deg); filter: blur(10px); }
           to { opacity: 1; transform: scale(1) translateY(0) rotateX(0); filter: blur(0); }
         }
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
         .animate-fade-in-up { animation: fadeInUp 0.8s cubic-bezier(0.19, 1, 0.22, 1) forwards; }
         .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
         .animate-staggered-fade { animation: staggeredFade 0.75s cubic-bezier(0.19, 1, 0.22, 1) both; }
+        .animate-slide-down { animation: slideDown 0.4s cubic-bezier(0.19, 1, 0.22, 1) forwards; }
         
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
