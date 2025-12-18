@@ -348,4 +348,3 @@ export const tools: ToolConfig[] = [
     color: 'from-teal-500 to-emerald-500'
   }
 ];
-
